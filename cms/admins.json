@@ -1,0 +1,10 @@
+{
+  "admins": [
+    {
+      "email": "ibrahimalnuaimi.ik@gmail.com",
+      "salt": "5472bbe01569feecb14d7826512f2cfd",
+      "hash": "46aa121b17bb47c23841c785066b3a33602be07e9d20b1b2bbbf17424c6f0cd225d9f9b0bb76ecdeb8adf89a232b1e4b95b158b3c1e421453840b1f67cced4e6",
+      "createdAt": "2026-07-17T00:00:00.000Z"
+    }
+  ]
+}
