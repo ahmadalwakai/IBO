@@ -17,13 +17,17 @@ function blobPathFor(file: string) {
 async function readBlobText(file: string) {
   if (!blobConfigured) return null;
 
-  const blob = await get(blobPathFor(file), {
-    access: "private",
-    useCache: false,
-  });
+  try {
+    const blob = await get(blobPathFor(file), {
+      access: "private",
+      useCache: false,
+    });
 
-  if (!blob || blob.statusCode !== 200 || !blob.stream) return null;
-  return new Response(blob.stream).text();
+    if (!blob || blob.statusCode !== 200 || !blob.stream) return null;
+    return new Response(blob.stream).text();
+  } catch {
+    return null;
+  }
 }
 
 export async function readJsonFile<T>(file: string): Promise<T> {

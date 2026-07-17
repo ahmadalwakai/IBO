@@ -135,14 +135,264 @@ type AdminInfo = {
   createdAt: string;
 };
 
+type Language = "de" | "ar";
 type TabKey = "home" | "website" | "chat" | "quotes" | "admins";
 type WebsitePanel = "contact" | "settings" | "services" | "cards" | "before";
+
+const defaultBaseURL = "https://raumwerkpro.de";
+const fallbackBaseURL: string = "https://ibo-two-sepia.vercel.app";
 
 const storageKeys = {
   baseURL: "ibo-admin-expo-base-url",
   email: "ibo-admin-expo-email",
+  language: "ibo-admin-expo-language",
   token: "ibo-admin-expo-token",
 };
+
+const translations = {
+  de: {
+    langGerman: "DE",
+    langArabic: "AR",
+    controlCenter: "Kontrollzentrum",
+    subtitle: "Expo-App zur Verwaltung der Live-Website.",
+    serverUrl: "Server-URL",
+    adminEmail: "Admin-E-Mail",
+    password: "Passwort",
+    signIn: "Anmelden",
+    logout: "Abmelden",
+    save: "Speichern",
+    delete: "Löschen",
+    done: "Erledigt",
+    refresh: "Aktualisieren",
+    refreshAll: "Alles aktualisieren",
+    tabs: {
+      home: "Start",
+      website: "Website",
+      chat: "Chat",
+      quotes: "Anfragen",
+      admins: "Admins",
+    },
+    metrics: {
+      services: "Leistungen",
+      cards: "Karten",
+      newChats: "Neue Chats",
+      newQuotes: "Neue Anfragen",
+    },
+    fastActions: "Schnellaktionen",
+    savePublish: "Website speichern und veröffentlichen",
+    panels: {
+      contact: "Kontakt",
+      settings: "Einstellungen",
+      services: "Leistungen",
+      cards: "Karten",
+      before: "Vorher/Nachher",
+    },
+    contactDetails: "Kontaktdaten",
+    companyName: "Firmenname",
+    legalName: "Rechtlicher Name",
+    tagline: "Slogan",
+    address: "Adresse",
+    phoneVisible: "Telefon sichtbar",
+    phoneLink: "Telefon-Link",
+    whatsappNumber: "WhatsApp-Nummer",
+    email: "E-Mail",
+    websiteUrl: "Website-URL",
+    liveControls: "Live-Steuerung",
+    whatsappFloating: "Schwebender WhatsApp-Button",
+    chatWidget: "Chat-Widget",
+    quoteForm: "Anfrageformular",
+    beforeAfterSection: "Vorher/Nachher-Bereich",
+    chatGreeting: "Chat-Begrüßung",
+    heroImage: "Hero-Bild",
+    addService: "Leistung hinzufügen",
+    addCard: "Karte hinzufügen",
+    beforeAfter: "Vorher/Nachher",
+    titleLabel: "Titel",
+    textLabel: "Text",
+    beforeLabel: "Vorher-Label",
+    afterLabel: "Nachher-Label",
+    imageLabel: "Bild",
+    noImage: "Kein Bild ausgewählt",
+    uploadReplace: "Hochladen / ersetzen",
+    icon: "Icon",
+    highlights: "Highlights, eine Zeile pro Punkt",
+    seoTitle: "SEO-Titel",
+    seoDescription: "SEO-Beschreibung",
+    slug: "Slug",
+    eyebrow: "Kategoriezeile",
+    shortText: "Kurztext",
+    summary: "Zusammenfassung",
+    category: "Kategorie",
+    noChatMessages: "Noch keine Chat-Nachrichten.",
+    noQuoteRequests: "Noch keine Anfragen.",
+    noEmail: "Keine E-Mail",
+    customer: "Kunde",
+    admin: "Admin",
+    replyInChat: "Antwort im Website-Chat",
+    sendReply: "Antwort senden",
+    addAdmin: "Admin hinzufügen",
+    adminPassword: "Admin-Passwort",
+    created: "Erstellt",
+    statusMap: {
+      new: "Neu",
+      read: "Gelesen",
+      done: "Erledigt",
+    },
+    status: {
+      ready: "Bereit",
+      loading: "Daten werden geladen...",
+      signingIn: "Anmeldung...",
+      signedIn: "Angemeldet",
+      signedOut: "Abgemeldet",
+      savingWebsite: "Website wird gespeichert...",
+      websiteSaved: "Website gespeichert",
+      uploadingImage: "Bild wird hochgeladen...",
+      imageUploaded: "Bild hochgeladen",
+      sendingReply: "Antwort wird gesendet...",
+      replySent: "Antwort gesendet",
+      updatingChat: "Chat wird aktualisiert...",
+      chatDone: "Chat erledigt",
+      updatingQuote: "Anfrage wird aktualisiert...",
+      quoteDone: "Anfrage erledigt",
+      addingAdmin: "Admin wird hinzugefügt...",
+      adminAdded: "Admin hinzugefügt",
+      deletingAdmin: "Admin wird gelöscht...",
+      adminDeleted: "Admin gelöscht",
+      refreshing: "Aktualisierung...",
+      inboxRefreshed: "Posteingang aktualisiert",
+      refreshFailed: "Aktualisierung fehlgeschlagen",
+      requestFailed: "Anfrage fehlgeschlagen",
+      uploadFailed: "Upload fehlgeschlagen",
+      invalidServerResponse: "Ungültige Serverantwort",
+    },
+    alerts: {
+      photoAccessTitle: "Fotozugriff benötigt",
+      photoAccessBody: "Erlauben Sie Fotozugriff, um Website-Bilder hochzuladen.",
+    },
+  },
+  ar: {
+    langGerman: "ألماني",
+    langArabic: "عربي",
+    controlCenter: "لوحة التحكم",
+    subtitle: "تطبيق Expo لإدارة الموقع المباشر.",
+    serverUrl: "رابط الخادم",
+    adminEmail: "بريد المدير",
+    password: "كلمة المرور",
+    signIn: "تسجيل الدخول",
+    logout: "تسجيل الخروج",
+    save: "حفظ",
+    delete: "حذف",
+    done: "تم",
+    refresh: "تحديث",
+    refreshAll: "تحديث الكل",
+    tabs: {
+      home: "الرئيسية",
+      website: "الموقع",
+      chat: "الدردشة",
+      quotes: "الطلبات",
+      admins: "المديرون",
+    },
+    metrics: {
+      services: "الخدمات",
+      cards: "البطاقات",
+      newChats: "دردشات جديدة",
+      newQuotes: "طلبات جديدة",
+    },
+    fastActions: "إجراءات سريعة",
+    savePublish: "حفظ ونشر الموقع",
+    panels: {
+      contact: "التواصل",
+      settings: "الإعدادات",
+      services: "الخدمات",
+      cards: "البطاقات",
+      before: "قبل/بعد",
+    },
+    contactDetails: "بيانات التواصل",
+    companyName: "اسم الشركة",
+    legalName: "الاسم القانوني",
+    tagline: "الشعار",
+    address: "العنوان",
+    phoneVisible: "رقم الهاتف الظاهر",
+    phoneLink: "رابط الهاتف",
+    whatsappNumber: "رقم واتساب",
+    email: "البريد الإلكتروني",
+    websiteUrl: "رابط الموقع",
+    liveControls: "التحكم المباشر",
+    whatsappFloating: "زر واتساب العائم",
+    chatWidget: "أداة الدردشة",
+    quoteForm: "نموذج الطلب",
+    beforeAfterSection: "قسم قبل/بعد",
+    chatGreeting: "رسالة ترحيب الدردشة",
+    heroImage: "صورة الواجهة",
+    addService: "إضافة خدمة",
+    addCard: "إضافة بطاقة",
+    beforeAfter: "قبل/بعد",
+    titleLabel: "العنوان",
+    textLabel: "النص",
+    beforeLabel: "وسم قبل",
+    afterLabel: "وسم بعد",
+    imageLabel: "الصورة",
+    noImage: "لم يتم اختيار صورة",
+    uploadReplace: "رفع / استبدال",
+    icon: "الأيقونة",
+    highlights: "النقاط المهمة، سطر لكل نقطة",
+    seoTitle: "عنوان SEO",
+    seoDescription: "وصف SEO",
+    slug: "الرابط المختصر",
+    eyebrow: "سطر التصنيف",
+    shortText: "نص قصير",
+    summary: "الملخص",
+    category: "التصنيف",
+    noChatMessages: "لا توجد رسائل دردشة بعد.",
+    noQuoteRequests: "لا توجد طلبات بعد.",
+    noEmail: "لا يوجد بريد",
+    customer: "العميل",
+    admin: "المدير",
+    replyInChat: "الرد داخل دردشة الموقع",
+    sendReply: "إرسال الرد",
+    addAdmin: "إضافة مدير",
+    adminPassword: "كلمة مرور المدير",
+    created: "تم الإنشاء",
+    statusMap: {
+      new: "جديد",
+      read: "مقروء",
+      done: "تم",
+    },
+    status: {
+      ready: "جاهز",
+      loading: "جاري تحميل البيانات...",
+      signingIn: "جاري تسجيل الدخول...",
+      signedIn: "تم تسجيل الدخول",
+      signedOut: "تم تسجيل الخروج",
+      savingWebsite: "جاري حفظ الموقع...",
+      websiteSaved: "تم حفظ الموقع",
+      uploadingImage: "جاري رفع الصورة...",
+      imageUploaded: "تم رفع الصورة",
+      sendingReply: "جاري إرسال الرد...",
+      replySent: "تم إرسال الرد",
+      updatingChat: "جاري تحديث الدردشة...",
+      chatDone: "تم إنهاء الدردشة",
+      updatingQuote: "جاري تحديث الطلب...",
+      quoteDone: "تم إنهاء الطلب",
+      addingAdmin: "جاري إضافة المدير...",
+      adminAdded: "تمت إضافة المدير",
+      deletingAdmin: "جاري حذف المدير...",
+      adminDeleted: "تم حذف المدير",
+      refreshing: "جاري التحديث...",
+      inboxRefreshed: "تم تحديث صندوق الرسائل",
+      refreshFailed: "فشل التحديث",
+      requestFailed: "فشل الطلب",
+      uploadFailed: "فشل الرفع",
+      invalidServerResponse: "استجابة الخادم غير صالحة",
+    },
+    alerts: {
+      photoAccessTitle: "نحتاج الوصول للصور",
+      photoAccessBody: "اسمح بالوصول للصور حتى يمكن رفع صور الموقع.",
+    },
+  },
+};
+
+type Translations = typeof translations.de;
 
 const iconOptions = [
   "PaintRoller",
@@ -204,7 +454,8 @@ function imageUri(value: string, baseURL: string) {
 }
 
 export default function App() {
-  const [baseURL, setBaseURL] = useState("https://raumwerkpro.de");
+  const [language, setLanguage] = useState<Language>("de");
+  const [baseURL, setBaseURL] = useState(defaultBaseURL);
   const [email, setEmail] = useState("ibrahimalnuaimi.ik@gmail.com");
   const [password, setPassword] = useState("");
   const [token, setToken] = useState("");
@@ -212,7 +463,7 @@ export default function App() {
   const [quotes, setQuotes] = useState<QuoteLead[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [admins, setAdmins] = useState<AdminInfo[]>([]);
-  const [status, setStatus] = useState("Ready");
+  const [status, setStatus] = useState(translations.de.status.ready);
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<TabKey>("home");
   const [websitePanel, setWebsitePanel] = useState<WebsitePanel>("contact");
@@ -223,11 +474,21 @@ export default function App() {
   const authed = Boolean(token);
   const newChats = messages.filter((item) => item.status === "new").length;
   const newQuotes = quotes.filter((item) => item.status === "new").length;
+  const t = translations[language];
 
-  const endpoint = useCallback(
-    (path: string) => `${normalizeBaseURL(baseURL)}${path}`,
-    [baseURL],
-  );
+  const changeLanguage = useCallback(async (value: Language) => {
+    setLanguage(value);
+    await SecureStore.setItemAsync(storageKeys.language, value);
+  }, []);
+
+  const requestUrls = useCallback((path: string) => {
+    const normalized = normalizeBaseURL(baseURL || defaultBaseURL);
+    const urls = [`${normalized}${path}`];
+    if (normalized === defaultBaseURL && fallbackBaseURL !== defaultBaseURL) {
+      urls.push(`${fallbackBaseURL}${path}`);
+    }
+    return urls;
+  }, [baseURL]);
 
   const request = useCallback(
     async <T,>(
@@ -246,17 +507,44 @@ export default function App() {
         headers.set("Authorization", `Bearer ${token}`);
       }
 
-      const response = await fetch(endpoint(path), { ...options, headers });
-      const text = await response.text();
-      const data = text ? JSON.parse(text) : {};
+      let lastError: Error | null = null;
+      const urls = requestUrls(path);
 
-      if (!response.ok) {
-        throw new Error(data.error ?? text ?? "Request failed");
+      for (const url of urls) {
+        try {
+          const response = await fetch(url, { ...options, headers });
+          const text = await response.text();
+          let data: Record<string, unknown> = {};
+
+          if (text) {
+            try {
+              data = JSON.parse(text) as Record<string, unknown>;
+            } catch {
+              if (url !== urls[urls.length - 1]) continue;
+              throw new Error(t.status.invalidServerResponse);
+            }
+          }
+
+          if (!response.ok) {
+            const message =
+              typeof data.error === "string" ? data.error : text || t.status.requestFailed;
+            if (url !== urls[urls.length - 1] && [404, 502, 503, 504].includes(response.status)) {
+              lastError = new Error(message);
+              continue;
+            }
+            throw new Error(message);
+          }
+
+          return data as T;
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error(t.status.requestFailed);
+          if (url === urls[urls.length - 1]) break;
+        }
       }
 
-      return data as T;
+      throw lastError ?? new Error(t.status.requestFailed);
     },
-    [endpoint, token],
+    [requestUrls, t.status.invalidServerResponse, t.status.requestFailed, token],
   );
 
   const run = useCallback(async (label: string, action: () => Promise<void>) => {
@@ -265,11 +553,11 @@ export default function App() {
     try {
       await action();
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Something went wrong");
+      setStatus(error instanceof Error ? error.message : t.status.requestFailed);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t.status.requestFailed]);
 
   const loadAll = useCallback(async () => {
     const [loadedContent, loadedQuotes, loadedMessages, loadedAdmins] = await Promise.all([
@@ -293,34 +581,36 @@ export default function App() {
         ]);
         setQuotes(loadedQuotes.quotes);
         setMessages(loadedMessages.messages);
-        if (!silent) setStatus("Inbox refreshed");
+        if (!silent) setStatus(t.status.inboxRefreshed);
       } catch (error) {
-        if (!silent) setStatus(error instanceof Error ? error.message : "Refresh failed");
+        if (!silent) setStatus(error instanceof Error ? error.message : t.status.refreshFailed);
       }
     },
-    [request],
+    [request, t.status.inboxRefreshed, t.status.refreshFailed],
   );
 
   useEffect(() => {
     void (async () => {
-      const [storedBase, storedEmail, storedToken] = await Promise.all([
+      const [storedBase, storedEmail, storedLanguage, storedToken] = await Promise.all([
         SecureStore.getItemAsync(storageKeys.baseURL),
         SecureStore.getItemAsync(storageKeys.email),
+        SecureStore.getItemAsync(storageKeys.language),
         SecureStore.getItemAsync(storageKeys.token),
       ]);
       if (storedBase) setBaseURL(storedBase);
       if (storedEmail) setEmail(storedEmail);
+      if (storedLanguage === "de" || storedLanguage === "ar") setLanguage(storedLanguage);
       if (storedToken) setToken(storedToken);
     })();
   }, []);
 
   useEffect(() => {
     if (!token) return;
-    void run("Loading data...", async () => {
+    void run(t.status.loading, async () => {
       await loadAll();
-      setStatus("Ready");
+      setStatus(t.status.ready);
     });
-  }, [loadAll, run, token]);
+  }, [loadAll, run, t.status.loading, t.status.ready, token]);
 
   useEffect(() => {
     if (!token) return;
@@ -331,7 +621,7 @@ export default function App() {
   }, [refreshInbox, token]);
 
   async function login() {
-    await run("Signing in...", async () => {
+    await run(t.status.signingIn, async () => {
       const result = await request<{ ok: boolean; email: string; token: string }>(
         "/api/admin/login",
         {
@@ -348,7 +638,7 @@ export default function App() {
       setEmail(result.email);
       setToken(result.token);
       setPassword("");
-      setStatus("Signed in");
+      setStatus(t.status.signedIn);
     });
   }
 
@@ -359,18 +649,18 @@ export default function App() {
     setMessages([]);
     setQuotes([]);
     setAdmins([]);
-    setStatus("Signed out");
+    setStatus(t.status.signedOut);
   }
 
   async function saveContent() {
     if (!content) return;
-    await run("Saving website...", async () => {
+    await run(t.status.savingWebsite, async () => {
       const result = await request<{ ok: boolean; content: CmsContent }>("/api/admin/content", {
         method: "PUT",
         body: JSON.stringify(content),
       });
       setContent(result.content);
-      setStatus("Website saved");
+      setStatus(t.status.websiteSaved);
     });
   }
 
@@ -386,7 +676,7 @@ export default function App() {
   async function uploadImage(onUploaded: (url: string) => void) {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Photo access needed", "Allow photo access to upload website images.");
+      Alert.alert(t.alerts.photoAccessTitle, t.alerts.photoAccessBody);
       return;
     }
 
@@ -399,7 +689,7 @@ export default function App() {
     if (result.canceled || !result.assets[0]) return;
     const asset = result.assets[0];
 
-    await run("Uploading image...", async () => {
+    await run(t.status.uploadingImage, async () => {
       const form = new FormData();
       form.append("file", {
         uri: asset.uri,
@@ -412,9 +702,9 @@ export default function App() {
         { method: "POST", body: form },
       );
 
-      if (!response.url) throw new Error(response.error ?? "Upload failed");
+      if (!response.url) throw new Error(response.error ?? t.status.uploadFailed);
       onUploaded(response.url);
-      setStatus("Image uploaded");
+      setStatus(t.status.imageUploaded);
     });
   }
 
@@ -422,43 +712,43 @@ export default function App() {
     const reply = replyDrafts[message.id]?.trim();
     if (!reply) return;
 
-    await run("Sending reply...", async () => {
+    await run(t.status.sendingReply, async () => {
       const result = await request<{ ok: boolean; messages: ChatMessage[] }>("/api/admin/messages", {
         method: "PATCH",
         body: JSON.stringify({ id: message.id, reply }),
       });
       setMessages(result.messages);
       setReplyDrafts((current) => ({ ...current, [message.id]: "" }));
-      setStatus("Reply sent");
+      setStatus(t.status.replySent);
     });
   }
 
   async function markMessage(message: ChatMessage) {
-    await run("Updating chat...", async () => {
+    await run(t.status.updatingChat, async () => {
       const result = await request<{ ok: boolean; messages: ChatMessage[] }>("/api/admin/messages", {
         method: "PATCH",
         body: JSON.stringify({ id: message.id, status: "done" }),
       });
       setMessages(result.messages);
-      setStatus("Chat done");
+      setStatus(t.status.chatDone);
     });
   }
 
   async function markQuote(quote: QuoteLead) {
-    await run("Updating quote...", async () => {
+    await run(t.status.updatingQuote, async () => {
       const result = await request<{ ok: boolean; quotes: QuoteLead[] }>("/api/admin/quotes", {
         method: "PATCH",
         body: JSON.stringify({ id: quote.id, status: "done" }),
       });
       setQuotes(result.quotes);
-      setStatus("Quote done");
+      setStatus(t.status.quoteDone);
     });
   }
 
   async function addAdmin() {
     if (!newAdminEmail.trim() || !newAdminPassword.trim()) return;
 
-    await run("Adding admin...", async () => {
+    await run(t.status.addingAdmin, async () => {
       const result = await request<{ ok: boolean; admin: AdminInfo }>("/api/admin/admins", {
         method: "POST",
         body: JSON.stringify({ email: newAdminEmail, password: newAdminPassword }),
@@ -466,18 +756,18 @@ export default function App() {
       setAdmins((current) => [result.admin, ...current]);
       setNewAdminEmail("");
       setNewAdminPassword("");
-      setStatus("Admin added");
+      setStatus(t.status.adminAdded);
     });
   }
 
   async function deleteAdmin(admin: AdminInfo) {
-    await run("Deleting admin...", async () => {
+    await run(t.status.deletingAdmin, async () => {
       await request<{ ok: boolean }>("/api/admin/admins", {
         method: "DELETE",
         body: JSON.stringify({ email: admin.email }),
       });
       setAdmins((current) => current.filter((item) => item.email !== admin.email));
-      setStatus("Admin deleted");
+      setStatus(t.status.adminDeleted);
     });
   }
 
@@ -497,16 +787,17 @@ export default function App() {
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.flex}>
           <ScrollView contentContainerStyle={styles.loginScreen} keyboardShouldPersistTaps="handled">
             <View style={styles.brandBlock}>
+              <LanguageSwitch language={language} t={t} onChange={changeLanguage} />
               <Text style={styles.kicker}>IBO ADMIN</Text>
-              <Text style={styles.title}>Control Center</Text>
-              <Text style={styles.muted}>Expo app for managing the live website.</Text>
+              <Text style={styles.title}>{t.controlCenter}</Text>
+              <Text style={styles.muted}>{t.subtitle}</Text>
             </View>
 
             <View style={styles.card}>
-              <LabeledInput label="Server URL" value={baseURL} onChangeText={setBaseURL} autoCapitalize="none" />
-              <LabeledInput label="Admin email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
-              <LabeledInput label="Password" value={password} onChangeText={setPassword} secureTextEntry />
-              <PrimaryButton label="Sign in" onPress={login} disabled={loading} />
+              <LabeledInput label={t.serverUrl} value={baseURL} onChangeText={setBaseURL} autoCapitalize="none" />
+              <LabeledInput label={t.adminEmail} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
+              <LabeledInput label={t.password} value={password} onChangeText={setPassword} secureTextEntry />
+              <PrimaryButton label={t.signIn} onPress={login} disabled={loading} />
             </View>
 
             <StatusLine status={status} loading={loading} />
@@ -522,11 +813,14 @@ export default function App() {
         <View style={styles.topbar}>
           <View>
             <Text style={styles.kicker}>IBO ADMIN</Text>
-            <Text style={styles.headerTitle}>Control Center</Text>
+            <Text style={styles.headerTitle}>{t.controlCenter}</Text>
           </View>
-          <Pressable style={styles.ghostButton} onPress={logout}>
-            <Text style={styles.buttonText}>Logout</Text>
-          </Pressable>
+          <View style={styles.topbarActions}>
+            <LanguageSwitch language={language} t={t} onChange={changeLanguage} compact />
+            <Pressable style={styles.ghostButton} onPress={logout}>
+              <Text style={styles.buttonText}>{t.logout}</Text>
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.tabs}>
@@ -537,7 +831,7 @@ export default function App() {
               onPress={() => setTab(item)}
             >
               <Text style={[styles.tabText, tab === item && styles.activeTabText]}>
-                {tabLabel(item)}
+                {tabLabel(item, t)}
                 {item === "chat" && newChats ? ` ${newChats}` : ""}
                 {item === "quotes" && newQuotes ? ` ${newQuotes}` : ""}
               </Text>
@@ -548,15 +842,15 @@ export default function App() {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           {tab === "home" && (
             <View style={styles.grid}>
-              <Metric title="Services" value={summary.services} />
-              <Metric title="Cards" value={summary.cards} />
-              <Metric title="New chats" value={summary.chats} />
-              <Metric title="New quotes" value={summary.quotes} />
+              <Metric title={t.metrics.services} value={summary.services} />
+              <Metric title={t.metrics.cards} value={summary.cards} />
+              <Metric title={t.metrics.newChats} value={summary.chats} />
+              <Metric title={t.metrics.newQuotes} value={summary.quotes} />
 
               <View style={styles.card}>
-                <Text style={styles.sectionTitle}>Fast actions</Text>
-                <PrimaryButton label="Save and publish website" onPress={saveContent} disabled={!content || loading} />
-                <SecondaryButton label="Refresh all" onPress={() => run("Refreshing...", loadAll)} />
+                <Text style={styles.sectionTitle}>{t.fastActions}</Text>
+                <PrimaryButton label={t.savePublish} onPress={saveContent} disabled={!content || loading} />
+                <SecondaryButton label={t.refreshAll} onPress={() => run(t.status.refreshing, loadAll)} />
               </View>
             </View>
           )}
@@ -571,6 +865,7 @@ export default function App() {
               uploadImage={uploadImage}
               saveContent={saveContent}
               loading={loading}
+              t={t}
             />
           )}
 
@@ -582,11 +877,12 @@ export default function App() {
               sendReply={sendReply}
               markDone={markMessage}
               refresh={() => refreshInbox()}
+              t={t}
             />
           )}
 
           {tab === "quotes" && (
-            <QuotesEditor quotes={quotes} markDone={markQuote} refresh={() => refreshInbox()} />
+            <QuotesEditor quotes={quotes} markDone={markQuote} refresh={() => refreshInbox()} t={t} />
           )}
 
           {tab === "admins" && (
@@ -598,31 +894,32 @@ export default function App() {
               setPassword={setNewAdminPassword}
               addAdmin={addAdmin}
               deleteAdmin={deleteAdmin}
+              t={t}
             />
           )}
         </ScrollView>
 
         <View style={styles.bottomBar}>
           <StatusLine status={status} loading={loading} compact />
-          <PrimaryButton label="Save" onPress={saveContent} disabled={!content || loading} small />
+          <PrimaryButton label={t.save} onPress={saveContent} disabled={!content || loading} small />
         </View>
       </View>
     </SafeAreaView>
   );
 }
 
-function tabLabel(tab: TabKey) {
+function tabLabel(tab: TabKey, t: Translations) {
   switch (tab) {
     case "home":
-      return "Home";
+      return t.tabs.home;
     case "website":
-      return "Website";
+      return t.tabs.website;
     case "chat":
-      return "Chat";
+      return t.tabs.chat;
     case "quotes":
-      return "Quotes";
+      return t.tabs.quotes;
     case "admins":
-      return "Admins";
+      return t.tabs.admins;
   }
 }
 
@@ -635,9 +932,10 @@ type WebsiteEditorProps = {
   uploadImage: (onUploaded: (url: string) => void) => Promise<void>;
   saveContent: () => Promise<void>;
   loading: boolean;
+  t: Translations;
 };
 
-function WebsiteEditor({ content, baseURL, panel, setPanel, update, uploadImage, saveContent, loading }: WebsiteEditorProps) {
+function WebsiteEditor({ content, baseURL, panel, setPanel, update, uploadImage, saveContent, loading, t }: WebsiteEditorProps) {
   return (
     <View style={styles.stack}>
       <View style={styles.segmented}>
@@ -647,47 +945,48 @@ function WebsiteEditor({ content, baseURL, panel, setPanel, update, uploadImage,
             style={[styles.segment, panel === item && styles.activeSegment]}
             onPress={() => setPanel(item)}
           >
-            <Text style={[styles.segmentText, panel === item && styles.activeSegmentText]}>{panelLabel(item)}</Text>
+            <Text style={[styles.segmentText, panel === item && styles.activeSegmentText]}>{panelLabel(item, t)}</Text>
           </Pressable>
         ))}
       </View>
 
       {panel === "contact" && (
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Contact details</Text>
-          <LabeledInput label="Company name" value={content.company.name} onChangeText={(value) => update((draft) => { draft.company.name = value; })} />
-          <LabeledInput label="Legal name" value={content.company.legalName} onChangeText={(value) => update((draft) => { draft.company.legalName = value; })} />
-          <LabeledInput label="Tagline" value={content.company.tagline} onChangeText={(value) => update((draft) => { draft.company.tagline = value; })} />
-          <LabeledInput label="Address" value={content.company.address} onChangeText={(value) => update((draft) => { draft.company.address = value; })} />
-          <LabeledInput label="Phone visible" value={content.company.phone} onChangeText={(value) => update((draft) => { draft.company.phone = value; })} />
-          <LabeledInput label="Phone link" value={content.company.phoneHref} onChangeText={(value) => update((draft) => { draft.company.phoneHref = value; })} />
-          <LabeledInput label="WhatsApp number" value={content.company.whatsapp} onChangeText={(value) => update((draft) => { draft.company.whatsapp = value; })} />
-          <LabeledInput label="Email" value={content.company.email} onChangeText={(value) => update((draft) => { draft.company.email = value; draft.company.emailHref = `mailto:${value}`; })} />
-          <LabeledInput label="Website URL" value={content.company.url} onChangeText={(value) => update((draft) => { draft.company.url = value; })} />
+          <Text style={styles.sectionTitle}>{t.contactDetails}</Text>
+          <LabeledInput label={t.companyName} value={content.company.name} onChangeText={(value) => update((draft) => { draft.company.name = value; })} />
+          <LabeledInput label={t.legalName} value={content.company.legalName} onChangeText={(value) => update((draft) => { draft.company.legalName = value; })} />
+          <LabeledInput label={t.tagline} value={content.company.tagline} onChangeText={(value) => update((draft) => { draft.company.tagline = value; })} />
+          <LabeledInput label={t.address} value={content.company.address} onChangeText={(value) => update((draft) => { draft.company.address = value; })} />
+          <LabeledInput label={t.phoneVisible} value={content.company.phone} onChangeText={(value) => update((draft) => { draft.company.phone = value; })} />
+          <LabeledInput label={t.phoneLink} value={content.company.phoneHref} onChangeText={(value) => update((draft) => { draft.company.phoneHref = value; })} />
+          <LabeledInput label={t.whatsappNumber} value={content.company.whatsapp} onChangeText={(value) => update((draft) => { draft.company.whatsapp = value; })} />
+          <LabeledInput label={t.email} value={content.company.email} onChangeText={(value) => update((draft) => { draft.company.email = value; draft.company.emailHref = `mailto:${value}`; })} />
+          <LabeledInput label={t.websiteUrl} value={content.company.url} onChangeText={(value) => update((draft) => { draft.company.url = value; })} />
         </View>
       )}
 
       {panel === "settings" && (
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Live controls</Text>
-          <ToggleRow label="WhatsApp floating button" value={content.settings.whatsappFloating} onValueChange={(value) => update((draft) => { draft.settings.whatsappFloating = value; })} />
-          <ToggleRow label="Chat widget" value={content.settings.chatEnabled} onValueChange={(value) => update((draft) => { draft.settings.chatEnabled = value; })} />
-          <ToggleRow label="Quote form" value={content.settings.quoteEnabled} onValueChange={(value) => update((draft) => { draft.settings.quoteEnabled = value; })} />
-          <ToggleRow label="Before / after section" value={content.settings.beforeAfterEnabled} onValueChange={(value) => update((draft) => { draft.settings.beforeAfterEnabled = value; })} />
-          <LabeledInput label="Chat greeting" value={content.settings.chatGreeting} onChangeText={(value) => update((draft) => { draft.settings.chatGreeting = value; })} multiline />
+          <Text style={styles.sectionTitle}>{t.liveControls}</Text>
+          <ToggleRow label={t.whatsappFloating} value={content.settings.whatsappFloating} onValueChange={(value) => update((draft) => { draft.settings.whatsappFloating = value; })} />
+          <ToggleRow label={t.chatWidget} value={content.settings.chatEnabled} onValueChange={(value) => update((draft) => { draft.settings.chatEnabled = value; })} />
+          <ToggleRow label={t.quoteForm} value={content.settings.quoteEnabled} onValueChange={(value) => update((draft) => { draft.settings.quoteEnabled = value; })} />
+          <ToggleRow label={t.beforeAfterSection} value={content.settings.beforeAfterEnabled} onValueChange={(value) => update((draft) => { draft.settings.beforeAfterEnabled = value; })} />
+          <LabeledInput label={t.chatGreeting} value={content.settings.chatGreeting} onChangeText={(value) => update((draft) => { draft.settings.chatGreeting = value; })} multiline />
           <ImageField
-            label="Hero image"
+            label={t.heroImage}
             value={content.settings.heroImage}
             baseURL={baseURL}
             onChangeText={(value) => update((draft) => { draft.settings.heroImage = value; })}
             onUpload={() => uploadImage((url) => update((draft) => { draft.settings.heroImage = url; }))}
+            t={t}
           />
         </View>
       )}
 
       {panel === "services" && (
         <View style={styles.stack}>
-          <PrimaryButton label="Add service" onPress={() => update((draft) => { draft.services.unshift(emptyService()); })} />
+          <PrimaryButton label={t.addService} onPress={() => update((draft) => { draft.services.unshift(emptyService()); })} />
           {content.services.map((service, index) => (
             <ServiceCard
               key={`${service.slug}-${index}`}
@@ -696,6 +995,7 @@ function WebsiteEditor({ content, baseURL, panel, setPanel, update, uploadImage,
               update={(updater) => update((draft) => updater(draft.services[index]))}
               deleteItem={() => update((draft) => { draft.services.splice(index, 1); })}
               uploadImage={() => uploadImage((url) => update((draft) => { draft.services[index].image = url; }))}
+              t={t}
             />
           ))}
         </View>
@@ -703,7 +1003,7 @@ function WebsiteEditor({ content, baseURL, panel, setPanel, update, uploadImage,
 
       {panel === "cards" && (
         <View style={styles.stack}>
-          <PrimaryButton label="Add card" onPress={() => update((draft) => { draft.projects.unshift(emptyCard()); })} />
+          <PrimaryButton label={t.addCard} onPress={() => update((draft) => { draft.projects.unshift(emptyCard()); })} />
           {content.projects.map((card, index) => (
             <ProjectCardEditor
               key={`${card.title}-${index}`}
@@ -712,6 +1012,7 @@ function WebsiteEditor({ content, baseURL, panel, setPanel, update, uploadImage,
               update={(updater) => update((draft) => updater(draft.projects[index]))}
               deleteItem={() => update((draft) => { draft.projects.splice(index, 1); })}
               uploadImage={() => uploadImage((url) => update((draft) => { draft.projects[index].image = url; }))}
+              t={t}
             />
           ))}
         </View>
@@ -719,38 +1020,39 @@ function WebsiteEditor({ content, baseURL, panel, setPanel, update, uploadImage,
 
       {panel === "before" && (
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Before / after</Text>
-          <LabeledInput label="Title" value={content.beforeAfter.title} onChangeText={(value) => update((draft) => { draft.beforeAfter.title = value; })} multiline />
-          <LabeledInput label="Text" value={content.beforeAfter.text} onChangeText={(value) => update((draft) => { draft.beforeAfter.text = value; })} multiline />
-          <LabeledInput label="Before label" value={content.beforeAfter.beforeLabel} onChangeText={(value) => update((draft) => { draft.beforeAfter.beforeLabel = value; })} />
-          <LabeledInput label="After label" value={content.beforeAfter.afterLabel} onChangeText={(value) => update((draft) => { draft.beforeAfter.afterLabel = value; })} />
+          <Text style={styles.sectionTitle}>{t.beforeAfter}</Text>
+          <LabeledInput label={t.titleLabel} value={content.beforeAfter.title} onChangeText={(value) => update((draft) => { draft.beforeAfter.title = value; })} multiline />
+          <LabeledInput label={t.textLabel} value={content.beforeAfter.text} onChangeText={(value) => update((draft) => { draft.beforeAfter.text = value; })} multiline />
+          <LabeledInput label={t.beforeLabel} value={content.beforeAfter.beforeLabel} onChangeText={(value) => update((draft) => { draft.beforeAfter.beforeLabel = value; })} />
+          <LabeledInput label={t.afterLabel} value={content.beforeAfter.afterLabel} onChangeText={(value) => update((draft) => { draft.beforeAfter.afterLabel = value; })} />
           <ImageField
-            label="After image"
+            label={t.imageLabel}
             value={content.beforeAfter.afterImage}
             baseURL={baseURL}
             onChangeText={(value) => update((draft) => { draft.beforeAfter.afterImage = value; })}
             onUpload={() => uploadImage((url) => update((draft) => { draft.beforeAfter.afterImage = url; }))}
+            t={t}
           />
         </View>
       )}
 
-      <PrimaryButton label="Save and publish website" onPress={saveContent} disabled={loading} />
+      <PrimaryButton label={t.savePublish} onPress={saveContent} disabled={loading} />
     </View>
   );
 }
 
-function panelLabel(panel: WebsitePanel) {
+function panelLabel(panel: WebsitePanel, t: Translations) {
   switch (panel) {
     case "contact":
-      return "Contact";
+      return t.panels.contact;
     case "settings":
-      return "Settings";
+      return t.panels.settings;
     case "services":
-      return "Services";
+      return t.panels.services;
     case "cards":
-      return "Cards";
+      return t.panels.cards;
     case "before":
-      return "Before";
+      return t.panels.before;
   }
 }
 
@@ -760,32 +1062,35 @@ function ServiceCard({
   update,
   deleteItem,
   uploadImage,
+  t,
 }: {
   service: ServiceItem;
   baseURL: string;
   update: (updater: (draft: ServiceItem) => void) => void;
   deleteItem: () => void;
   uploadImage: () => Promise<void>;
+  t: Translations;
 }) {
   return (
     <View style={styles.card}>
       <View style={styles.rowBetween}>
         <Text style={styles.sectionTitle}>{service.title}</Text>
-        <DangerButton label="Delete" onPress={deleteItem} />
+        <DangerButton label={t.delete} onPress={deleteItem} />
       </View>
-      <LabeledInput label="Slug" value={service.slug} onChangeText={(value) => update((draft) => { draft.slug = value; })} />
-      <LabeledInput label="Title" value={service.title} onChangeText={(value) => update((draft) => { draft.title = value; })} />
-      <LabeledInput label="Eyebrow" value={service.eyebrow} onChangeText={(value) => update((draft) => { draft.eyebrow = value; })} />
-      <LabeledInput label="Short text" value={service.short} onChangeText={(value) => update((draft) => { draft.short = value; })} multiline />
-      <LabeledInput label="Summary" value={service.summary} onChangeText={(value) => update((draft) => { draft.summary = value; })} multiline />
+      <LabeledInput label={t.slug} value={service.slug} onChangeText={(value) => update((draft) => { draft.slug = value; })} />
+      <LabeledInput label={t.titleLabel} value={service.title} onChangeText={(value) => update((draft) => { draft.title = value; })} />
+      <LabeledInput label={t.eyebrow} value={service.eyebrow} onChangeText={(value) => update((draft) => { draft.eyebrow = value; })} />
+      <LabeledInput label={t.shortText} value={service.short} onChangeText={(value) => update((draft) => { draft.short = value; })} multiline />
+      <LabeledInput label={t.summary} value={service.summary} onChangeText={(value) => update((draft) => { draft.summary = value; })} multiline />
       <ImageField
-        label="Image"
+        label={t.imageLabel}
         value={service.image}
         baseURL={baseURL}
         onChangeText={(value) => update((draft) => { draft.image = value; })}
         onUpload={uploadImage}
+        t={t}
       />
-      <Text style={styles.label}>Icon</Text>
+      <Text style={styles.label}>{t.icon}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.iconScroller}>
         {iconOptions.map((icon) => (
           <Pressable key={icon} style={[styles.iconChip, service.iconName === icon && styles.activeIconChip]} onPress={() => update((draft) => { draft.iconName = icon; })}>
@@ -794,13 +1099,13 @@ function ServiceCard({
         ))}
       </ScrollView>
       <LabeledInput
-        label="Highlights, one per line"
+        label={t.highlights}
         value={service.highlights.join("\n")}
         onChangeText={(value) => update((draft) => { draft.highlights = value.split("\n").filter(Boolean); })}
         multiline
       />
-      <LabeledInput label="SEO title" value={service.seoTitle} onChangeText={(value) => update((draft) => { draft.seoTitle = value; })} />
-      <LabeledInput label="SEO description" value={service.seoDescription} onChangeText={(value) => update((draft) => { draft.seoDescription = value; })} multiline />
+      <LabeledInput label={t.seoTitle} value={service.seoTitle} onChangeText={(value) => update((draft) => { draft.seoTitle = value; })} />
+      <LabeledInput label={t.seoDescription} value={service.seoDescription} onChangeText={(value) => update((draft) => { draft.seoDescription = value; })} multiline />
     </View>
   );
 }
@@ -811,28 +1116,31 @@ function ProjectCardEditor({
   update,
   deleteItem,
   uploadImage,
+  t,
 }: {
   card: ProjectCard;
   baseURL: string;
   update: (updater: (draft: ProjectCard) => void) => void;
   deleteItem: () => void;
   uploadImage: () => Promise<void>;
+  t: Translations;
 }) {
   return (
     <View style={styles.card}>
       <View style={styles.rowBetween}>
         <Text style={styles.sectionTitle}>{card.title}</Text>
-        <DangerButton label="Delete" onPress={deleteItem} />
+        <DangerButton label={t.delete} onPress={deleteItem} />
       </View>
-      <LabeledInput label="Title" value={card.title} onChangeText={(value) => update((draft) => { draft.title = value; })} />
-      <LabeledInput label="Category" value={card.category} onChangeText={(value) => update((draft) => { draft.category = value; })} />
-      <LabeledInput label="Text" value={card.text} onChangeText={(value) => update((draft) => { draft.text = value; })} multiline />
+      <LabeledInput label={t.titleLabel} value={card.title} onChangeText={(value) => update((draft) => { draft.title = value; })} />
+      <LabeledInput label={t.category} value={card.category} onChangeText={(value) => update((draft) => { draft.category = value; })} />
+      <LabeledInput label={t.textLabel} value={card.text} onChangeText={(value) => update((draft) => { draft.text = value; })} multiline />
       <ImageField
-        label="Image"
+        label={t.imageLabel}
         value={card.image}
         baseURL={baseURL}
         onChangeText={(value) => update((draft) => { draft.image = value; })}
         onUpload={uploadImage}
+        t={t}
       />
     </View>
   );
@@ -844,12 +1152,14 @@ function ImageField({
   baseURL,
   onChangeText,
   onUpload,
+  t,
 }: {
   label: string;
   value: string;
   baseURL: string;
   onChangeText: (value: string) => void;
   onUpload: () => void;
+  t: Translations;
 }) {
   const uri = imageUri(value, baseURL);
 
@@ -859,11 +1169,11 @@ function ImageField({
         <Image source={{ uri }} style={styles.imagePreview} resizeMode="cover" />
       ) : (
         <View style={styles.imagePreviewEmpty}>
-          <Text style={styles.imagePreviewText}>No image selected</Text>
+          <Text style={styles.imagePreviewText}>{t.noImage}</Text>
         </View>
       )}
       <LabeledInput label={`${label} URL`} value={value} onChangeText={onChangeText} />
-      <SecondaryButton label={`Upload / replace ${label.toLowerCase()}`} onPress={onUpload} />
+      <SecondaryButton label={`${t.uploadReplace} ${label.toLowerCase()}`} onPress={onUpload} />
     </View>
   );
 }
@@ -875,6 +1185,7 @@ function ChatEditor({
   sendReply,
   markDone,
   refresh,
+  t,
 }: {
   messages: ChatMessage[];
   drafts: Record<string, string>;
@@ -882,36 +1193,37 @@ function ChatEditor({
   sendReply: (message: ChatMessage) => Promise<void>;
   markDone: (message: ChatMessage) => Promise<void>;
   refresh: () => Promise<void>;
+  t: Translations;
 }) {
   return (
     <View style={styles.stack}>
       <View style={styles.rowBetween}>
-        <Text style={styles.screenTitle}>Chat</Text>
-        <SecondaryButton label="Refresh" onPress={refresh} small />
+        <Text style={styles.screenTitle}>{t.tabs.chat}</Text>
+        <SecondaryButton label={t.refresh} onPress={refresh} small />
       </View>
-      {messages.length === 0 ? <EmptyState text="No chat messages yet." /> : null}
+      {messages.length === 0 ? <EmptyState text={t.noChatMessages} /> : null}
       {messages.map((message) => (
         <View style={styles.card} key={message.id}>
           <View style={styles.rowBetween}>
             <View style={styles.flex}>
               <Text style={styles.sectionTitle}>{message.name}</Text>
-              <Text style={styles.muted}>{message.email || "No email"} - {message.status}</Text>
+              <Text style={styles.muted}>{message.email || t.noEmail} - {t.statusMap[message.status]}</Text>
             </View>
-            <StatusPill status={message.status} />
+            <StatusPill status={message.status} t={t} />
           </View>
-          <Bubble author="Customer" text={message.message} />
+          <Bubble author={t.customer} text={message.message} />
           {(message.replies ?? []).map((reply) => (
-            <Bubble key={reply.id} author={reply.author === "admin" ? "Admin" : "Customer"} text={reply.message} admin={reply.author === "admin"} />
+            <Bubble key={reply.id} author={reply.author === "admin" ? t.admin : t.customer} text={reply.message} admin={reply.author === "admin"} />
           ))}
           <LabeledInput
-            label="Reply in website chat"
+            label={t.replyInChat}
             value={drafts[message.id] ?? ""}
             onChangeText={(value) => setDrafts((current) => ({ ...current, [message.id]: value }))}
             multiline
           />
           <View style={styles.actionRow}>
-            <PrimaryButton label="Send reply" onPress={() => sendReply(message)} small />
-            <SecondaryButton label="Done" onPress={() => markDone(message)} small />
+            <PrimaryButton label={t.sendReply} onPress={() => sendReply(message)} small />
+            <SecondaryButton label={t.done} onPress={() => markDone(message)} small />
           </View>
         </View>
       ))}
@@ -923,28 +1235,30 @@ function QuotesEditor({
   quotes,
   markDone,
   refresh,
+  t,
 }: {
   quotes: QuoteLead[];
   markDone: (quote: QuoteLead) => Promise<void>;
   refresh: () => Promise<void>;
+  t: Translations;
 }) {
   return (
     <View style={styles.stack}>
       <View style={styles.rowBetween}>
-        <Text style={styles.screenTitle}>Quotes</Text>
-        <SecondaryButton label="Refresh" onPress={refresh} small />
+        <Text style={styles.screenTitle}>{t.tabs.quotes}</Text>
+        <SecondaryButton label={t.refresh} onPress={refresh} small />
       </View>
-      {quotes.length === 0 ? <EmptyState text="No quote requests yet." /> : null}
+      {quotes.length === 0 ? <EmptyState text={t.noQuoteRequests} /> : null}
       {quotes.map((quote) => (
         <View style={styles.card} key={quote.id}>
           <View style={styles.rowBetween}>
             <Text style={styles.sectionTitle}>{quote.name}</Text>
-            <StatusPill status={quote.status} />
+            <StatusPill status={quote.status} t={t} />
           </View>
           <Text style={styles.bodyText}>{quote.message}</Text>
           <Text style={styles.muted}>{quote.phone}</Text>
-          <Text style={styles.muted}>{quote.email || "No email"}</Text>
-          <SecondaryButton label="Done" onPress={() => markDone(quote)} />
+          <Text style={styles.muted}>{quote.email || t.noEmail}</Text>
+          <SecondaryButton label={t.done} onPress={() => markDone(quote)} />
         </View>
       ))}
     </View>
@@ -959,6 +1273,7 @@ function AdminsEditor({
   setPassword,
   addAdmin,
   deleteAdmin,
+  t,
 }: {
   admins: AdminInfo[];
   email: string;
@@ -967,27 +1282,56 @@ function AdminsEditor({
   setPassword: (value: string) => void;
   addAdmin: () => Promise<void>;
   deleteAdmin: (admin: AdminInfo) => Promise<void>;
+  t: Translations;
 }) {
   return (
     <View style={styles.stack}>
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Add admin</Text>
-        <LabeledInput label="Admin email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
-        <LabeledInput label="Admin password" value={password} onChangeText={setPassword} secureTextEntry />
-        <PrimaryButton label="Add admin" onPress={addAdmin} disabled={!email.trim() || !password.trim()} />
+        <Text style={styles.sectionTitle}>{t.addAdmin}</Text>
+        <LabeledInput label={t.adminEmail} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
+        <LabeledInput label={t.adminPassword} value={password} onChangeText={setPassword} secureTextEntry />
+        <PrimaryButton label={t.addAdmin} onPress={addAdmin} disabled={!email.trim() || !password.trim()} />
       </View>
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Admins</Text>
+        <Text style={styles.sectionTitle}>{t.tabs.admins}</Text>
         {admins.map((admin) => (
           <View style={styles.adminRow} key={admin.email}>
             <View style={styles.flex}>
               <Text style={styles.bodyText}>{admin.email}</Text>
-              <Text style={styles.muted}>Created {new Date(admin.createdAt).toLocaleDateString()}</Text>
+              <Text style={styles.muted}>{t.created} {new Date(admin.createdAt).toLocaleDateString()}</Text>
             </View>
-            <DangerButton label="Delete" onPress={() => deleteAdmin(admin)} />
+            <DangerButton label={t.delete} onPress={() => deleteAdmin(admin)} />
           </View>
         ))}
       </View>
+    </View>
+  );
+}
+
+function LanguageSwitch({
+  language,
+  t,
+  onChange,
+  compact = false,
+}: {
+  language: Language;
+  t: Translations;
+  onChange: (language: Language) => void;
+  compact?: boolean;
+}) {
+  return (
+    <View style={[styles.languageSwitch, compact && styles.compactLanguageSwitch]}>
+      {(["de", "ar"] as Language[]).map((item) => (
+        <Pressable
+          key={item}
+          style={[styles.languageButton, language === item && styles.activeLanguageButton]}
+          onPress={() => onChange(item)}
+        >
+          <Text style={[styles.languageText, language === item && styles.activeLanguageText]}>
+            {item === "de" ? t.langGerman : t.langArabic}
+          </Text>
+        </Pressable>
+      ))}
     </View>
   );
 }
@@ -1053,10 +1397,10 @@ function Bubble({ author, text, admin = false }: { author: string; text: string;
   );
 }
 
-function StatusPill({ status }: { status: string }) {
+function StatusPill({ status, t }: { status: keyof Translations["statusMap"]; t: Translations }) {
   return (
     <View style={[styles.statusPill, status === "new" && styles.statusNew]}>
-      <Text style={styles.statusText}>{status}</Text>
+      <Text style={styles.statusText}>{t.statusMap[status]}</Text>
     </View>
   );
 }
@@ -1157,6 +1501,42 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255,255,255,0.12)",
+  },
+  topbarActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  languageSwitch: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    gap: 6,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.14)",
+    borderRadius: 16,
+    padding: 4,
+    backgroundColor: "rgba(255,255,255,0.07)",
+  },
+  compactLanguageSwitch: {
+    alignSelf: "center",
+  },
+  languageButton: {
+    minHeight: 34,
+    minWidth: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 12,
+    paddingHorizontal: 10,
+  },
+  activeLanguageButton: {
+    backgroundColor: "#38bdf8",
+  },
+  languageText: {
+    color: "rgba(248,250,252,0.76)",
+    fontWeight: "900",
+  },
+  activeLanguageText: {
+    color: "#07111f",
   },
   tabs: {
     flexDirection: "row",

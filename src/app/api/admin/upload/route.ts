@@ -13,9 +13,7 @@ function safeName(name: string) {
 }
 
 function blobUploadsEnabled() {
-  return Boolean(
-    process.env.BLOB_READ_WRITE_TOKEN || (process.env.BLOB_STORE_ID && process.env.VERCEL_OIDC_TOKEN),
-  );
+  return Boolean(process.env.BLOB_PUBLIC_READ_WRITE_TOKEN);
 }
 
 export async function POST(request: Request) {
@@ -39,6 +37,7 @@ export async function POST(request: Request) {
         addRandomSuffix: false,
         allowOverwrite: false,
         contentType: file.type,
+        token: process.env.BLOB_PUBLIC_READ_WRITE_TOKEN,
       });
 
       return NextResponse.json({ ok: true, url: blob.url });
@@ -49,7 +48,8 @@ export async function POST(request: Request) {
     await writeFile(path.join(uploadsDir, filename), buffer);
 
     return NextResponse.json({ ok: true, url: `/uploads/${filename}` });
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to upload";
+    return NextResponse.json({ error: message }, { status: message === "Unauthorized" ? 401 : 400 });
   }
 }

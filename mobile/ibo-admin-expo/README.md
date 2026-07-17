@@ -56,4 +56,4 @@ App Store Connect profile values:
 - Bundle ID: `de.ibocreative.admin`
 - SKU: `ibo-admin`
 - Platform: iOS
-- Primary language: English (U.S.) unless you prefer German
+- Primary language: German

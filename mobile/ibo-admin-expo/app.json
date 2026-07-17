@@ -17,8 +17,8 @@
       "bundleIdentifier": "de.ibocreative.admin",
       "icon": "./assets/icon.png",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "IBO Admin needs photo access to upload and replace website images.",
-        "NSCameraUsageDescription": "IBO Admin can use the camera to upload website images.",
+        "NSPhotoLibraryUsageDescription": "IBO Admin benötigt Fotozugriff, um Website-Bilder hochzuladen und zu ersetzen.",
+        "NSCameraUsageDescription": "IBO Admin kann die Kamera nutzen, um Website-Bilder hochzuladen.",
         "ITSAppUsesNonExemptEncryption": false,
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
