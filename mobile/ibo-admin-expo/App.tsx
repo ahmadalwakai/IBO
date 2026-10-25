@@ -1,6 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
 import * as SecureStore from "expo-secure-store";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { AccountingApp } from "./src/accounting/AccountingApp";
 import {
   ActivityIndicator,
   Alert,
@@ -136,7 +137,7 @@ type AdminInfo = {
 };
 
 type Language = "de" | "ar";
-type TabKey = "home" | "website" | "chat" | "quotes" | "admins";
+type TabKey = "home" | "website" | "chat" | "quotes" | "admins" | "finance";
 type WebsitePanel = "contact" | "settings" | "services" | "cards" | "before";
 
 const defaultBaseURL = "https://raumwerkpro.de";
@@ -171,6 +172,7 @@ const translations = {
       chat: "Chat",
       quotes: "Anfragen",
       admins: "Admins",
+      finance: "Finanzen",
     },
     metrics: {
       services: "Leistungen",
@@ -179,6 +181,9 @@ const translations = {
       newQuotes: "Neue Anfragen",
     },
     fastActions: "Schnellaktionen",
+    financeTitle: "Buchhaltung",
+    financeText: "Rechnungen, Belege scannen, Kunden, Ausgaben und Umsatzsteuer.",
+    openFinance: "Buchhaltung öffnen",
     savePublish: "Website speichern und veröffentlichen",
     panels: {
       contact: "Kontakt",
@@ -291,6 +296,7 @@ const translations = {
       chat: "الدردشة",
       quotes: "الطلبات",
       admins: "المديرون",
+      finance: "المالية",
     },
     metrics: {
       services: "الخدمات",
@@ -299,6 +305,9 @@ const translations = {
       newQuotes: "طلبات جديدة",
     },
     fastActions: "إجراءات سريعة",
+    financeTitle: "المحاسبة",
+    financeText: "الفواتير، مسح الإيصالات، العملاء، المصروفات وضريبة القيمة المضافة.",
+    openFinance: "فتح المحاسبة",
     savePublish: "حفظ ونشر الموقع",
     panels: {
       contact: "التواصل",
@@ -807,6 +816,10 @@ export default function App() {
     );
   }
 
+  if (tab === "finance") {
+    return <AccountingApp onClose={() => setTab("home")} seed={content?.company} />;
+  }
+
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.appShell}>
@@ -824,7 +837,7 @@ export default function App() {
         </View>
 
         <View style={styles.tabs}>
-          {(["home", "website", "chat", "quotes", "admins"] as TabKey[]).map((item) => (
+          {(["home", "finance", "website", "chat", "quotes", "admins"] as TabKey[]).map((item) => (
             <Pressable
               key={item}
               style={[styles.tab, tab === item && styles.activeTab]}
@@ -846,6 +859,14 @@ export default function App() {
               <Metric title={t.metrics.cards} value={summary.cards} />
               <Metric title={t.metrics.newChats} value={summary.chats} />
               <Metric title={t.metrics.newQuotes} value={summary.quotes} />
+
+              <View style={[styles.card, styles.financeCard]}>
+                <Text style={styles.financeKicker}>{t.financeTitle}</Text>
+                <Text style={styles.muted}>{t.financeText}</Text>
+                <Pressable style={styles.financeButton} onPress={() => setTab("finance")}>
+                  <Text style={styles.financeButtonText}>{t.openFinance}</Text>
+                </Pressable>
+              </View>
 
               <View style={styles.card}>
                 <Text style={styles.sectionTitle}>{t.fastActions}</Text>
@@ -920,6 +941,8 @@ function tabLabel(tab: TabKey, t: Translations) {
       return t.tabs.quotes;
     case "admins":
       return t.tabs.admins;
+    case "finance":
+      return t.tabs.finance;
   }
 }
 
@@ -1447,6 +1470,26 @@ function DangerButton({ label, onPress }: { label: string; onPress: () => void }
 }
 
 const styles = StyleSheet.create({
+  financeCard: {
+    borderColor: "rgba(216,181,106,0.45)",
+    backgroundColor: "#061E1B",
+  },
+  financeKicker: {
+    color: "#D8B56A",
+    fontSize: 18,
+    fontWeight: "900",
+  },
+  financeButton: {
+    minHeight: 46,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 16,
+    backgroundColor: "#00D6A0",
+  },
+  financeButtonText: {
+    color: "#061E1B",
+    fontWeight: "900",
+  },
   safe: {
     flex: 1,
     backgroundColor: "#07111f",
@@ -1540,8 +1583,9 @@ const styles = StyleSheet.create({
   },
   tabs: {
     flexDirection: "row",
-    gap: 8,
-    padding: 12,
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
   },
   tab: {
     flex: 1,
@@ -1557,7 +1601,7 @@ const styles = StyleSheet.create({
   tabText: {
     color: "rgba(248,250,252,0.76)",
     fontWeight: "800",
-    fontSize: 12,
+    fontSize: 11,
   },
   activeTabText: {
     color: "#07111f",
