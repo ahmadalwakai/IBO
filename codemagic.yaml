@@ -49,3 +49,61 @@ workflows:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
+
+  # Diagnostics: builds Release for the simulator, launches it and collects crash logs.
+  ibo-admin-ios-simulator-smoke:
+    name: IBO Admin iOS → Simulator smoke test
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      vars:
+        APP_DIR: mobile/ibo-admin-expo
+        BUNDLE_ID: de.ibocreative.admin
+        SMOKE_REFS: "HEAD 67baf00"
+      node: 22
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Build, launch and collect logs
+        script: |
+          set -x
+          ROOT="$CM_BUILD_DIR"
+          OUT="$ROOT/smoke"
+          mkdir -p "$OUT"
+          git fetch --unshallow || git fetch --all || true
+          UDID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print(next(x["udid"] for r,l in d.items() if "iOS" in r for x in l if x["name"].startswith("iPhone")))')
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b || true
+          for REF in $SMOKE_REFS; do
+            cd "$ROOT"
+            git checkout -f "$REF" -- . 2>/dev/null || git checkout -f "$REF"
+            SHA=$(git rev-parse --short HEAD)
+            cd "$ROOT/$APP_DIR"
+            npm ci > "$OUT/$REF-npm.log" 2>&1
+            npx expo prebuild --platform ios --clean --no-install > "$OUT/$REF-prebuild.log" 2>&1
+            (cd ios && pod install > "$OUT/$REF-pods.log" 2>&1)
+            xcodebuild -workspace ios/IBOAdmin.xcworkspace -scheme IBOAdmin -configuration Release \
+              -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/sim \
+              CODE_SIGNING_ALLOWED=NO build > "$OUT/$REF-xcodebuild.log" 2>&1 || { echo "BUILD FAILED $REF"; tail -40 "$OUT/$REF-xcodebuild.log"; continue; }
+            APP=$(find build/sim/Build/Products -maxdepth 2 -name "*.app" | head -1)
+            xcrun simctl uninstall "$UDID" "$BUNDLE_ID" || true
+            rm -f ~/Library/Logs/DiagnosticReports/IBOAdmin* || true
+            xcrun simctl install "$UDID" "$APP"
+            xcrun simctl launch "$UDID" "$BUNDLE_ID"
+            sleep 25
+            xcrun simctl io "$UDID" screenshot "$OUT/$REF-screen.png" || true
+            echo "=== $REF ($SHA) running processes:"
+            xcrun simctl spawn "$UDID" launchctl list | grep -i "$BUNDLE_ID" || echo "APP NOT RUNNING ($REF)"
+            xcrun simctl spawn "$UDID" log show --last 3m --style compact \
+              --predicate 'process == "IBOAdmin" AND (messageType == error OR messageType == fault OR eventMessage CONTAINS[c] "exception" OR eventMessage CONTAINS[c] "error")' \
+              > "$OUT/$REF-device.log" 2>&1 || true
+            echo "=== $REF device log (errors):"; tail -60 "$OUT/$REF-device.log"
+            for f in ~/Library/Logs/DiagnosticReports/IBOAdmin*; do
+              [ -f "$f" ] || continue
+              cp "$f" "$OUT/"
+              echo "=== CRASH REPORT $f"; head -120 "$f"
+            done
+            xcrun simctl terminate "$UDID" "$BUNDLE_ID" || true
+          done
+    artifacts:
+      - smoke/**
