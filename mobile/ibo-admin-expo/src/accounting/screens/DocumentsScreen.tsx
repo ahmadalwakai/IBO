@@ -5,8 +5,8 @@ import { isOcrAvailable, recognizeText } from "../../../modules/receipt-ocr";
 import { formatDate, formatMoney } from "../calc";
 import type { Nav } from "../navigation";
 import { groupRows } from "../receipt-parser";
-import { documentFile, importDocument, shareFile } from "../storage";
-import { useAccounting } from "../store";
+import { importDocument, shareFile } from "../storage";
+import { useAccounting, useDocumentUri } from "../store";
 import type { DocumentKind, StoredDocument } from "../types";
 import { Badge, Button, Card, Chips, colors, Empty, Field, HeaderButton, ListRow, Screen, SearchField, SectionTitle, styles, type IconName } from "../ui";
 
@@ -115,6 +115,7 @@ export function DocumentScreen({ nav, id }: { nav: Nav; id: string }) {
   const store = useAccounting();
   const doc = store.data.documents.find((item) => item.id === id);
   const [title, setTitle] = useState(doc?.title ?? "");
+  const local = useDocumentUri(doc);
   if (!doc) {
     return (
       <Screen title="Dokument" onBack={nav.back}>
@@ -122,7 +123,6 @@ export function DocumentScreen({ nav, id }: { nav: Nav; id: string }) {
       </Screen>
     );
   }
-  const file = documentFile(doc);
   const expense = doc.expenseId ? store.data.expenses.find((item) => item.id === doc.expenseId) : undefined;
   const twins = store.data.documents.filter((item) => item.id !== doc.id && item.fingerprint === doc.fingerprint);
   const update = (patch: Partial<StoredDocument>, note: string) =>
@@ -130,8 +130,19 @@ export function DocumentScreen({ nav, id }: { nav: Nav; id: string }) {
 
   return (
     <Screen title={doc.title} subtitle={`${kindLabels[doc.kind]} · ${formatSize(doc.size)}`} onBack={nav.back}>
-      {doc.mimeType.startsWith("image/") ? <Image source={{ uri: file.uri }} style={local.image} resizeMode="contain" /> : null}
-      <Button label={doc.mimeType === "application/pdf" ? "PDF öffnen / teilen" : "Original teilen"} icon="share-outline" onPress={() => shareFile(file.uri, doc.mimeType, doc.title).catch((error: unknown) => Alert.alert("Fehler", String(error)))} />
+      {doc.mimeType.startsWith("image/") && local.uri ? <Image source={{ uri: local.uri }} style={styles2.image} resizeMode="contain" /> : null}
+      {!local.uri ? (
+        <Card>
+          <Text style={styles.kvLabel}>{local.failed ? "Datei konnte nicht vom Server geladen werden." : doc.remote ? "Datei wird vom Server geladen…" : "Datei ist auf diesem Gerät nicht vorhanden."}</Text>
+        </Card>
+      ) : (
+        <Button
+          label={doc.mimeType === "application/pdf" ? "PDF öffnen / teilen" : "Original teilen"}
+          icon="share-outline"
+          onPress={() => shareFile(local.uri as string, doc.mimeType, doc.title).catch((error: unknown) => Alert.alert("Fehler", String(error)))}
+        />
+      )}
+      <Text style={styles.kvLabel}>{doc.remote ? "In der Cloud gesichert" : "Noch nicht in der Cloud gesichert"}</Text>
 
       {twins.length ? (
         <Card style={{ backgroundColor: "#F6EEDC" }}>
@@ -157,7 +168,7 @@ export function DocumentScreen({ nav, id }: { nav: Nav; id: string }) {
       {doc.text ? (
         <Card>
           <SectionTitle>Erkannter Text</SectionTitle>
-          <Text style={local.text} selectable>
+          <Text style={styles2.text} selectable>
             {doc.text}
           </Text>
         </Card>
@@ -196,7 +207,7 @@ export function DocumentScreen({ nav, id }: { nav: Nav; id: string }) {
   );
 }
 
-const local = StyleSheet.create({
+const styles2 = StyleSheet.create({
   image: { width: "100%", height: 420, borderRadius: 20, backgroundColor: colors.night },
   text: { color: colors.muted, fontFamily: "Menlo", fontSize: 12, lineHeight: 17 },
 });

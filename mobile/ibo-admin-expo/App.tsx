@@ -141,7 +141,7 @@ type TabKey = "home" | "website" | "chat" | "quotes" | "admins" | "finance";
 type WebsitePanel = "contact" | "settings" | "services" | "cards" | "before";
 
 const defaultBaseURL = "https://raumwerkpro.de";
-const fallbackBaseURL: string = "https://ibo-two-sepia.vercel.app";
+const fallbackBaseURL: string = "https://ibo-creative.vercel.app";
 
 const storageKeys = {
   baseURL: "ibo-admin-expo-base-url",
@@ -534,6 +534,13 @@ export default function App() {
             }
           }
 
+          if (response.status === 401 && requireToken) {
+            // The session was revoked (e.g. a rotated server secret): return to the login screen.
+            await SecureStore.deleteItemAsync(storageKeys.token);
+            setToken("");
+            throw new Error(t.status.signedOut);
+          }
+
           if (!response.ok) {
             const message =
               typeof data.error === "string" ? data.error : text || t.status.requestFailed;
@@ -780,6 +787,11 @@ export default function App() {
     });
   }
 
+  const accountingServer = useMemo(
+    () => (token ? { baseURL: normalizeBaseURL(baseURL || defaultBaseURL), token } : undefined),
+    [baseURL, token],
+  );
+
   const summary = useMemo(
     () => ({
       services: content?.services.length ?? 0,
@@ -817,7 +829,7 @@ export default function App() {
   }
 
   if (tab === "finance") {
-    return <AccountingApp onClose={() => setTab("home")} seed={content?.company} />;
+    return <AccountingApp onClose={() => setTab("home")} seed={content?.company} server={accountingServer} onUnauthorized={logout} />;
   }
 
   return (

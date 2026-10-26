@@ -3,21 +3,31 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { dashboard, formatDate, formatMoney } from "../calc";
 import type { Nav } from "../navigation";
 import { useAccounting } from "../store";
+import { syncLabel } from "../sync";
 import { Card, colors, Empty, Icon, ListRow, Money, Screen, SectionTitle, type IconName } from "../ui";
 
 export function DashboardScreen({ nav, onClose }: { nav: Nav; onClose: () => void }) {
-  const { data } = useAccounting();
+  const { data, syncStatus, syncNow } = useAccounting();
   const stats = useMemo(() => dashboard(data), [data]);
 
   return (
     <Screen
       title="Übersicht"
-      subtitle={data.company.name || "Buchhaltung"}
+      subtitle={`${data.company.name || "Buchhaltung"} · ${syncLabel(syncStatus)}`}
       onBack={onClose}
       right={
-        <Pressable accessibilityLabel="Firmendaten" onPress={() => nav.push({ name: "settings" })} hitSlop={10}>
-          <Icon name="settings-outline" color={colors.emerald} size={22} />
-        </Pressable>
+        <View style={local.headerActions}>
+          <Pressable accessibilityLabel="Jetzt synchronisieren" onPress={syncNow} hitSlop={10}>
+            <Icon
+              name={syncStatus.kind === "offline" || syncStatus.kind === "unauthorized" ? "cloud-offline-outline" : syncStatus.kind === "syncing" ? "sync" : "cloud-done-outline"}
+              color={syncStatus.kind === "offline" || syncStatus.kind === "unauthorized" ? colors.gold : colors.emerald}
+              size={22}
+            />
+          </Pressable>
+          <Pressable accessibilityLabel="Firmendaten" onPress={() => nav.push({ name: "settings" })} hitSlop={10}>
+            <Icon name="settings-outline" color={colors.emerald} size={22} />
+          </Pressable>
+        </View>
       }
     >
       <Card dark style={local.hero}>
@@ -167,6 +177,7 @@ function Kpi({
 }
 
 const local = StyleSheet.create({
+  headerActions: { flexDirection: "row", gap: 16, alignItems: "center" },
   hero: { gap: 6, paddingVertical: 20 },
   heroLabel: { color: colors.onDarkMuted, fontSize: 13 },
   heroValue: { color: colors.onDark, fontSize: 34, fontWeight: "900" },

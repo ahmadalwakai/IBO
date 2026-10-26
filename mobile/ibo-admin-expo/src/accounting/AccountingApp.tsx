@@ -12,6 +12,7 @@ import { MoreScreen, SettingsScreen, SoonScreen } from "./screens/MoreScreen";
 import { ScannerScreen } from "./screens/ScannerScreen";
 import type { CompanySeed } from "./storage";
 import { AccountingProvider } from "./store";
+import type { ServerConfig } from "./sync";
 import { colors, Icon, type IconName } from "./ui";
 
 const tabs: { key: TabKey; label: string; icon: IconName; activeIcon: IconName }[] = [
@@ -29,10 +30,22 @@ const createActions: { label: string; hint: string; icon: IconName; route: Route
   { label: "Angebot erstellen", hint: "Später in Rechnung umwandeln", icon: "pricetag", route: { name: "newInvoice", kind: "offer" } },
 ];
 
-export function AccountingApp({ onClose, seed }: { onClose: () => void; seed?: CompanySeed }) {
+export function AccountingApp({
+  onClose,
+  seed,
+  server,
+  onUnauthorized,
+}: {
+  onClose: () => void;
+  seed?: CompanySeed;
+  server?: ServerConfig;
+  onUnauthorized?: () => void;
+}) {
   return (
     <AccountingProvider
       seed={seed}
+      server={server}
+      onUnauthorized={onUnauthorized}
       loading={
         <View style={[local.root, local.center]}>
           <ActivityIndicator color={colors.emerald} size="large" />

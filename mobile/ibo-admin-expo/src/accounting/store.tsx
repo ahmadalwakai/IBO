@@ -1,10 +1,37 @@
+import { File } from "expo-file-system";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { AppState } from "react-native";
 import { addDays, createId, nextDocumentNumber, nextRecurrenceDate, todayISO } from "./calc";
-import { loadData, removeDocumentFile, saveData, type CompanySeed } from "./storage";
+import {
+  documentFile,
+  loadData,
+  loadSyncState,
+  normalizeData,
+  removeDocumentFile,
+  saveData,
+  saveSyncState,
+  type CompanySeed,
+} from "./storage";
+import {
+  documentUrl,
+  fetchRemote,
+  hasContent,
+  mergeData,
+  pushRemote,
+  UnauthorizedError,
+  type ServerConfig,
+  type SyncState,
+  type SyncStatus,
+} from "./sync";
 import type { AccountingData, Customer, Expense, Invoice, StoredDocument } from "./types";
+
+const maxUploadBytes = 4 * 1024 * 1024;
 
 type Store = {
   data: AccountingData;
+  syncStatus: SyncStatus;
+  syncNow: () => void;
+  ensureDocument: (doc: StoredDocument) => Promise<string | null>;
   update: (updater: (draft: AccountingData) => AccountingData) => void;
   saveCustomer: (customer: Customer) => void;
   deleteCustomer: (id: string) => void;
@@ -34,36 +61,186 @@ function upsert<T extends { id: string }>(list: T[], item: T) {
 
 export function AccountingProvider({
   seed,
+  server,
+  onUnauthorized,
   children,
   loading,
 }: {
   seed?: CompanySeed;
+  server?: ServerConfig;
+  onUnauthorized?: () => void;
   children: React.ReactNode;
   loading: React.ReactNode;
 }) {
   const [data, setData] = useState<AccountingData | null>(null);
   const dataRef = useRef<AccountingData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>(server ? { kind: "syncing" } : { kind: "disabled" });
+  const syncMeta = useRef<{ state: SyncState; base: AccountingData } | null>(null);
+  const syncing = useRef(false);
+  const rerun = useRef(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const runSyncRef = useRef<() => Promise<void>>(async () => {});
+
+  const applyLocal = useCallback((next: AccountingData) => {
+    dataRef.current = next;
+    setData(next);
+    saveData(next);
+  }, []);
+
+  const scheduleSync = useCallback((delay: number) => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => void runSyncRef.current(), delay);
+  }, []);
+
+  const update = useCallback(
+    (updater: (draft: AccountingData) => AccountingData) => {
+      const current = dataRef.current;
+      if (!current) return;
+      applyLocal(updater(current));
+      const meta = syncMeta.current;
+      if (meta && !meta.state.dirty) {
+        meta.state = { ...meta.state, dirty: true };
+        saveSyncState(meta.state);
+      }
+      scheduleSync(1500);
+    },
+    [applyLocal, scheduleSync],
+  );
+
+  const commitSync = useCallback((revision: number, base: AccountingData) => {
+    const state: SyncState = { revision, dirty: dataRef.current !== base, lastSyncedAt: new Date().toISOString() };
+    syncMeta.current = { state, base };
+    saveSyncState(state, base);
+  }, []);
+
+  /** Uploads archived files the server does not have yet, then flags them in one change. */
+  const uploadDocuments = useCallback(async () => {
+    if (!server || !dataRef.current) return;
+    const uploaded: string[] = [];
+    for (const doc of dataRef.current.documents.filter((item) => !item.remote && item.size <= maxUploadBytes)) {
+      const file = documentFile(doc);
+      if (!file.exists) continue;
+      const result = await file.upload(documentUrl(server, doc.fileName), {
+        httpMethod: "PUT",
+        headers: { Authorization: `Bearer ${server.token}` },
+        mimeType: doc.mimeType,
+      });
+      if (result.status === 401) throw new UnauthorizedError("Anmeldung abgelaufen");
+      if (result.status >= 200 && result.status < 300) uploaded.push(doc.id);
+    }
+    if (uploaded.length) {
+      update((draft) => ({
+        ...draft,
+        documents: draft.documents.map((doc) => (uploaded.includes(doc.id) ? { ...doc, remote: true } : doc)),
+      }));
+    }
+  }, [server, update]);
+
+  const runSync = useCallback(async () => {
+    if (!server || !syncMeta.current || !dataRef.current) return;
+    if (syncing.current) {
+      rerun.current = true;
+      return;
+    }
+    syncing.current = true;
+    setSyncStatus({ kind: "syncing" });
+    let failed = false;
+    try {
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        const meta = syncMeta.current as { state: SyncState; base: AccountingData };
+        const local = dataRef.current as AccountingData;
+        const remote = await fetchRemote(server);
+        // Local edits during the request make this round stale; start over with fresh data.
+        if (dataRef.current !== local) continue;
+
+        const remoteData = remote.data ? normalizeData(remote.data, seed) : null;
+        let target = local;
+        let push = meta.state.dirty;
+        if (!remoteData) {
+          push = push || hasContent(local);
+        } else if (remote.revision !== meta.state.revision) {
+          if (meta.state.dirty) {
+            target = mergeData(meta.base, local, remoteData);
+          } else {
+            target = remoteData;
+            push = false;
+          }
+        }
+
+        if (target !== local) applyLocal(target);
+        if (!push) {
+          commitSync(remote.revision, target);
+          break;
+        }
+        const revision = await pushRemote(server, remote.revision, target);
+        if (revision === null) continue;
+        commitSync(revision, target);
+        break;
+      }
+      await uploadDocuments();
+      setSyncStatus({ kind: "synced", at: new Date().toISOString() });
+    } catch (reason) {
+      failed = true;
+      if (reason instanceof UnauthorizedError) {
+        setSyncStatus({ kind: "unauthorized" });
+        onUnauthorized?.();
+      } else {
+        setSyncStatus({ kind: "offline", message: reason instanceof Error ? reason.message : String(reason) });
+      }
+    } finally {
+      syncing.current = false;
+      // Offline retries happen on the periodic timer instead of in a tight loop.
+      if (!failed && (rerun.current || syncMeta.current?.state.dirty)) {
+        rerun.current = false;
+        scheduleSync(1500);
+      }
+    }
+  }, [applyLocal, commitSync, onUnauthorized, scheduleSync, seed, server, uploadDocuments]);
+
+  useEffect(() => {
+    runSyncRef.current = runSync;
+  }, [runSync]);
 
   useEffect(() => {
     loadData(seed)
-      .then((loaded) => {
+      .then(async (loaded) => {
+        syncMeta.current = await loadSyncState(loaded);
         dataRef.current = loaded;
         setData(loaded);
+        void runSyncRef.current();
       })
       .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : String(reason)));
     // The seed only fills an empty profile on first launch.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const update = useCallback((updater: (draft: AccountingData) => AccountingData) => {
-    const current = dataRef.current;
-    if (!current) return;
-    const next = updater(current);
-    dataRef.current = next;
-    setData(next);
-    saveData(next);
-  }, []);
+  useEffect(() => {
+    if (!server) return;
+    const interval = setInterval(() => void runSyncRef.current(), 60_000);
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") void runSyncRef.current();
+    });
+    return () => {
+      clearInterval(interval);
+      subscription.remove();
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, [server]);
+
+  const ensureDocument = useCallback(
+    async (doc: StoredDocument) => {
+      const file = documentFile(doc);
+      if (file.exists) return file.uri;
+      if (!server || !doc.remote) return null;
+      const downloaded = await File.downloadFileAsync(documentUrl(server, doc.fileName), file, {
+        headers: { Authorization: `Bearer ${server.token}` },
+        idempotent: true,
+      });
+      return downloaded.uri;
+    },
+    [server],
+  );
 
   const store = useMemo<Store | null>(() => {
     if (!data) return null;
@@ -105,6 +282,9 @@ export function AccountingProvider({
 
     return {
       data,
+      syncStatus,
+      syncNow: () => void runSyncRef.current(),
+      ensureDocument,
       update,
       saveCustomer: (customer) => update((draft) => ({ ...draft, customers: upsert(draft.customers, customer) })),
       deleteCustomer: (id) => update((draft) => ({ ...draft, customers: draft.customers.filter((customer) => customer.id !== id) })),
@@ -187,11 +367,34 @@ export function AccountingProvider({
         }));
       },
     };
-  }, [data, update]);
+  }, [data, ensureDocument, syncStatus, update]);
 
   if (error) throw new Error(`Buchhaltungsdaten konnten nicht geladen werden: ${error}`);
   if (!store) return <>{loading}</>;
   return <AccountingContext.Provider value={store}>{children}</AccountingContext.Provider>;
+}
+
+/** Local file URI for a document, downloading it first when it only exists on the server. */
+export function useDocumentUri(doc?: StoredDocument) {
+  const { ensureDocument } = useAccounting();
+  const [uri, setUri] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    setUri(null);
+    setFailed(false);
+    if (doc) {
+      ensureDocument(doc)
+        .then((value) => alive && setUri(value))
+        .catch(() => alive && setFailed(true));
+    }
+    return () => {
+      alive = false;
+    };
+    // Re-run only when the document identity or its server copy changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doc?.id, doc?.remote]);
+  return { uri, failed };
 }
 
 export function useAccounting() {

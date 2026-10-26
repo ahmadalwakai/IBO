@@ -4,6 +4,7 @@ import { formatMoney } from "../calc";
 import type { Nav, SoonKey } from "../navigation";
 import { shareBackup } from "../storage";
 import { useAccounting } from "../store";
+import { syncLabel } from "../sync";
 import type { CompanyProfile } from "../types";
 import { AmountField, Badge, Button, Card, colors, Field, Icon, ListRow, Screen, SectionTitle, Segmented, styles, type IconName } from "../ui";
 
@@ -75,7 +76,7 @@ const upcoming: { key: SoonKey; icon: IconName; title: string; phase: 2 | 3; tex
 ];
 
 export function MoreScreen({ nav }: { nav: Nav }) {
-  const { data } = useAccounting();
+  const { data, syncStatus, syncNow } = useAccounting();
   const expensesTotal = data.expenses.reduce((sum, expense) => sum + expense.total, 0);
 
   return (
@@ -87,6 +88,14 @@ export function MoreScreen({ nav }: { nav: Nav }) {
         <ListRow icon="document-attach" iconTone="dark" title="Beleg aus PDF" subtitle="PDF-Rechnung eines Lieferanten auslesen" onPress={() => nav.push({ name: "scanner", mode: "pdf" })} right={<Chevron />} />
         <ListRow icon="folder-open" iconTone="dark" title="Dokumente" subtitle={`${data.documents.length} im Archiv`} onPress={() => nav.push({ name: "documents" })} right={<Chevron />} />
         <ListRow icon="business" iconTone="dark" title="Firmendaten & Steuern" subtitle="Für Rechnungen und UStVA" onPress={() => nav.push({ name: "settings" })} right={<Chevron />} />
+        <ListRow
+          icon="cloud-upload"
+          iconTone="dark"
+          title="Cloud-Synchronisierung"
+          subtitle={syncStatus.kind === "offline" ? `${syncLabel(syncStatus)} · ${syncStatus.message}` : syncLabel(syncStatus)}
+          onPress={syncNow}
+          right={<Icon name="refresh" color={colors.muted} />}
+        />
         <ListRow
           icon="cloud-download"
           iconTone="gold"

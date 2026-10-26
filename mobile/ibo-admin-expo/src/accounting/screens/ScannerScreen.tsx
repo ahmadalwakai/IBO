@@ -22,7 +22,7 @@ async function pick(mode: "camera" | "library" | "pdf") {
   if (!permission.granted) {
     throw new Error(mode === "camera" ? "Bitte erlauben Sie den Kamerazugriff in den iPhone-Einstellungen." : "Bitte erlauben Sie den Fotozugriff in den iPhone-Einstellungen.");
   }
-  const options: ImagePicker.ImagePickerOptions = { mediaTypes: ["images"], quality: 0.9, allowsEditing: false, exif: false };
+  const options: ImagePicker.ImagePickerOptions = { mediaTypes: ["images"], quality: 0.6, allowsEditing: false, exif: false };
   const result = mode === "camera" ? await ImagePicker.launchCameraAsync(options) : await ImagePicker.launchImageLibraryAsync(options);
   if (result.canceled || !result.assets[0]) return null;
   return { uri: result.assets[0].uri, mimeType: result.assets[0].mimeType ?? "image/jpeg" };

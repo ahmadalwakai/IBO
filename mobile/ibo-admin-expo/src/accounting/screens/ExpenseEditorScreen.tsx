@@ -15,8 +15,8 @@ import {
 } from "../calc";
 import type { Nav, ScanSource } from "../navigation";
 import type { ReceiptDraft } from "../receipt-parser";
-import { documentFile, importDocument } from "../storage";
-import { useAccounting } from "../store";
+import { importDocument } from "../storage";
+import { useAccounting, useDocumentUri } from "../store";
 import type { Expense, ExpenseCategory, ExpenseItem, PaymentMethod, VatRate } from "../types";
 import {
   AmountField,
@@ -71,7 +71,8 @@ export function ExpenseEditorScreen({
   const [showText, setShowText] = useState(false);
   const [saveSupplier, setSaveSupplier] = useState(!existing);
   const doc = expense.documentId ? data.documents.find((item) => item.id === expense.documentId) : undefined;
-  const previewUri = source?.mimeType.startsWith("image/") ? source.uri : doc?.mimeType.startsWith("image/") ? documentFile(doc).uri : undefined;
+  const archived = useDocumentUri(doc);
+  const previewUri = source?.mimeType.startsWith("image/") ? source.uri : doc?.mimeType.startsWith("image/") ? (archived.uri ?? undefined) : undefined;
 
   const set = (patch: Partial<Expense>) => setExpense((value) => ({ ...value, ...patch }));
   const setItems = (items: ExpenseItem[]) => {

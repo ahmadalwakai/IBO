@@ -143,6 +143,8 @@ export type StoredDocument = {
   fingerprint: string;
   expenseId?: string;
   invoiceId?: string;
+  /** True once the file is stored on the server. */
+  remote?: boolean;
   history: HistoryEntry[];
   createdAt: string;
 };

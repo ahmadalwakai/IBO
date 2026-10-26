@@ -7,7 +7,15 @@ import { readJsonFile, writeJsonFile } from "./json-storage";
 
 const adminsFile = path.join(process.cwd(), "cms", "admins.json");
 const cookieName = "ibo_admin_session";
-const secret = process.env.ADMIN_SESSION_SECRET ?? "ibo-local-admin-session-secret-change-me";
+const devSecret = "ibo-local-admin-session-secret-change-me";
+
+/** The fallback is public in the repo, so deployed environments must never sign with it. */
+function sessionSecret() {
+  const secret = process.env.ADMIN_SESSION_SECRET;
+  if (secret) return secret;
+  if (process.env.VERCEL_ENV) throw new Error("ADMIN_SESSION_SECRET is not configured");
+  return devSecret;
+}
 
 type AdminUser = {
   email: string;
@@ -35,7 +43,7 @@ function safeEqual(a: string, b: string) {
 }
 
 function sign(payload: string) {
-  return crypto.createHmac("sha256", secret).update(payload).digest("hex");
+  return crypto.createHmac("sha256", sessionSecret()).update(payload).digest("hex");
 }
 
 function createSessionValue(email: string) {
@@ -48,7 +56,7 @@ function readSessionValue(value: string | undefined) {
   if (!value) return null;
   const [email, expiresRaw, signature] = value.split("|");
   const payload = `${email}|${expiresRaw}`;
-  if (!email || !expiresRaw || !signature || sign(payload) !== signature) return null;
+  if (!email || !expiresRaw || !signature || !safeEqual(sign(payload), signature)) return null;
   if (Number(expiresRaw) < Date.now()) return null;
   return { email };
 }
@@ -115,12 +123,15 @@ export async function clearAdminSession() {
 
 export async function getAdminSession() {
   const jar = await cookies();
-  const cookieSession = readSessionValue(jar.get(cookieName)?.value);
-  if (cookieSession) return cookieSession;
-
   const authorization = (await headers()).get("authorization");
   const token = authorization?.startsWith("Bearer ") ? authorization.slice("Bearer ".length) : undefined;
-  return readSessionValue(token);
+  const session = readSessionValue(jar.get(cookieName)?.value) ?? readSessionValue(token);
+  if (!session) return null;
+
+  // A valid signature is not enough: deleted admins must lose access immediately.
+  const { admins } = await readAdmins();
+  const exists = admins.some((admin) => admin.email.toLowerCase() === session.email.toLowerCase());
+  return exists ? session : null;
 }
 
 export async function requireAdmin() {

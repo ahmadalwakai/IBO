@@ -1,6 +1,7 @@
 import { Directory, File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { createId, todayISO } from "./calc";
+import { hasContent, type SyncState } from "./sync";
 import type { AccountingData, CompanyProfile, DocumentKind, StoredDocument } from "./types";
 
 const rootDir = () => new Directory(Paths.document, "accounting");
@@ -63,11 +64,8 @@ export function emptyData(seed?: CompanySeed): AccountingData {
   };
 }
 
-export async function loadData(seed?: CompanySeed): Promise<AccountingData> {
-  ensureDirs();
-  const file = dataFile();
-  if (!file.exists) return emptyData(seed);
-  const parsed = JSON.parse(await file.text()) as Partial<AccountingData>;
+/** Fills fields added in later app versions, for local files and server snapshots alike. */
+export function normalizeData(parsed: Partial<AccountingData>, seed?: CompanySeed): AccountingData {
   const base = emptyData(seed);
   return {
     ...base,
@@ -76,11 +74,47 @@ export async function loadData(seed?: CompanySeed): Promise<AccountingData> {
   } as AccountingData;
 }
 
+export async function loadData(seed?: CompanySeed): Promise<AccountingData> {
+  ensureDirs();
+  const file = dataFile();
+  if (!file.exists) return emptyData(seed);
+  return normalizeData(JSON.parse(await file.text()) as Partial<AccountingData>, seed);
+}
+
 export function saveData(data: AccountingData) {
   ensureDirs();
   const file = dataFile();
   if (!file.exists) file.create();
   file.write(JSON.stringify(data));
+}
+
+const syncFile = () => new File(rootDir(), "sync.json");
+const baseFile = () => new File(rootDir(), "sync-base.json");
+
+/** A device that saved data before sync existed starts dirty, so its data is uploaded once. */
+export async function loadSyncState(data: AccountingData): Promise<{ state: SyncState; base: AccountingData }> {
+  ensureDirs();
+  const stateFile = syncFile();
+  const snapshotFile = baseFile();
+  if (!stateFile.exists || !snapshotFile.exists) {
+    return { state: { revision: 0, dirty: hasContent(data), lastSyncedAt: null }, base: { ...emptyData(), company: data.company } };
+  }
+  return {
+    state: JSON.parse(await stateFile.text()) as SyncState,
+    base: JSON.parse(await snapshotFile.text()) as AccountingData,
+  };
+}
+
+export function saveSyncState(state: SyncState, base?: AccountingData) {
+  ensureDirs();
+  const stateFile = syncFile();
+  if (!stateFile.exists) stateFile.create();
+  stateFile.write(JSON.stringify(state));
+  if (base) {
+    const snapshotFile = baseFile();
+    if (!snapshotFile.exists) snapshotFile.create();
+    snapshotFile.write(JSON.stringify(base));
+  }
 }
 
 export function documentFile(doc: Pick<StoredDocument, "fileName">) {
