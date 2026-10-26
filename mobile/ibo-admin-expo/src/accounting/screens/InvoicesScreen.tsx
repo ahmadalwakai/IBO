@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { formatDate, formatMoney, isOverdue, statusOf, totalsFor } from "../calc";
 import type { Nav } from "../navigation";
 import { useAccounting } from "../store";
-import { Badge, Button, Card, Chips, Empty, HeaderButton, ListRow, Screen, SearchField, styles } from "../ui";
+import { Badge, Button, Card, Chips, Empty, ListRow, Screen, SearchField, styles } from "../../ui";
 
 type Filter = "all" | "draft" | "open" | "overdue" | "paid" | "offers";
 
@@ -51,7 +51,6 @@ export function InvoicesScreen({ nav }: { nav: Nav }) {
     <Screen
       title="Rechnungen"
       subtitle={`${list.length} Dokumente · ${formatMoney(sum)}`}
-      right={<HeaderButton icon="add-circle" label="Neue Rechnung" onPress={() => nav.push({ name: "newInvoice", kind: filter === "offers" ? "offer" : "invoice" })} />}
     >
       <SearchField value={query} onChangeText={setQuery} placeholder="Nummer oder Kunde suchen" />
       <Chips options={filters} value={filter} onChange={setFilter} />

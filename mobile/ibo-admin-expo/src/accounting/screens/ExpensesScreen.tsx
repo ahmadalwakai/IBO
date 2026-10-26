@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { expenseCategoryLabels, formatDate, formatMoney, round2 } from "../calc";
 import type { Nav } from "../navigation";
 import { useAccounting } from "../store";
-import { Badge, Card, Empty, HeaderButton, ListRow, Screen, SearchField, SectionTitle } from "../ui";
+import { Badge, Card, Empty, HeaderButton, ListRow, Screen, SearchField, SectionTitle } from "../../ui";
 
 const monthNames = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
 

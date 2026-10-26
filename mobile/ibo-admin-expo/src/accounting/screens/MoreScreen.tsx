@@ -6,7 +6,7 @@ import { shareBackup } from "../storage";
 import { useAccounting } from "../store";
 import { syncLabel } from "../sync";
 import type { CompanyProfile } from "../types";
-import { AmountField, Badge, Button, Card, colors, Field, Icon, ListRow, Screen, SectionTitle, Segmented, styles, type IconName } from "../ui";
+import { AmountField, Badge, Button, Card, colors, Field, Icon, ListRow, Screen, SectionTitle, Segmented, styles, type IconName } from "../../ui";
 
 const upcoming: { key: SoonKey; icon: IconName; title: string; phase: 2 | 3; text: string; features: string[] }[] = [
   {

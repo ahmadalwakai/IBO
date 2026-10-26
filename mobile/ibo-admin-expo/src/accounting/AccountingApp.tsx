@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Modal, Pressable, SafeAreaView, StatusBar, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Keyboard, Modal, Pressable, SafeAreaView, StatusBar, StyleSheet, Text, View } from "react-native";
 import type { Nav, Route, TabKey } from "./navigation";
 import { CustomerEditorScreen, CustomersScreen } from "./screens/CustomersScreen";
 import { DashboardScreen } from "./screens/DashboardScreen";
@@ -13,7 +13,7 @@ import { ScannerScreen } from "./screens/ScannerScreen";
 import type { CompanySeed } from "./storage";
 import { AccountingProvider } from "./store";
 import type { ServerConfig } from "./sync";
-import { colors, Icon, type IconName } from "./ui";
+import { colors, Icon, KeyboardDoneBar, tint, type IconName } from "../ui";
 
 const tabs: { key: TabKey; label: string; icon: IconName; activeIcon: IconName }[] = [
   { key: "dashboard", label: "Übersicht", icon: "home-outline", activeIcon: "home" },
@@ -61,6 +61,16 @@ function AccountingShell({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState<TabKey>("dashboard");
   const [stack, setStack] = useState<{ key: number; route: Route }[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+
+  useEffect(() => {
+    const show = Keyboard.addListener("keyboardWillShow", () => setKeyboardOpen(true));
+    const hide = Keyboard.addListener("keyboardWillHide", () => setKeyboardOpen(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   const nav = useMemo<Nav>(() => {
     let counter = Date.now();
@@ -123,13 +133,13 @@ function AccountingShell({ onClose }: { onClose: () => void }) {
         ))}
       </View>
 
-      {!top ? (
+      {!top && !keyboardOpen ? (
         <View style={local.tabBar}>
           {tabs.slice(0, 2).map((item) => (
             <TabButton key={item.key} item={item} active={tab === item.key} onPress={() => nav.setTab(item.key)} />
           ))}
           <Pressable accessibilityRole="button" accessibilityLabel="Neu erstellen" onPress={() => setSheetOpen(true)} style={local.fab}>
-            <Icon name="add" size={32} color={colors.night} />
+            <Icon name="add" size={30} color={colors.onPrimary} />
           </Pressable>
           {tabs.slice(2).map((item) => (
             <TabButton key={item.key} item={item} active={tab === item.key} onPress={() => nav.setTab(item.key)} />
@@ -152,7 +162,7 @@ function AccountingShell({ onClose }: { onClose: () => void }) {
                 }}
               >
                 <View style={local.sheetIcon}>
-                  <Icon name={action.icon} color={colors.night} size={20} />
+                  <Icon name={action.icon} color={colors.emerald} size={20} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={local.sheetLabel}>{action.label}</Text>
@@ -164,6 +174,7 @@ function AccountingShell({ onClose }: { onClose: () => void }) {
           </Pressable>
         </Pressable>
       </Modal>
+      <KeyboardDoneBar />
     </SafeAreaView>
   );
 }
@@ -180,7 +191,7 @@ function TabButton({ item, active, onPress }: { item: (typeof tabs)[number]; act
 const local = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.night },
   center: { alignItems: "center", justifyContent: "center" },
-  content: { flex: 1, backgroundColor: colors.soft },
+  content: { flex: 1, backgroundColor: colors.night },
   hidden: { display: "none" },
   tabBar: {
     flexDirection: "row",
@@ -188,45 +199,42 @@ const local = StyleSheet.create({
     backgroundColor: colors.night,
     paddingHorizontal: 8,
     paddingTop: 8,
-    paddingBottom: 6,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    marginTop: -24,
+    paddingBottom: 4,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   tab: { flex: 1, alignItems: "center", gap: 3, paddingVertical: 4 },
-  tabLabel: { color: colors.onDarkMuted, fontSize: 11, fontWeight: "700" },
+  tabLabel: { color: colors.onDarkMuted, fontSize: 11, fontWeight: "600" },
   tabLabelActive: { color: colors.emerald },
   fab: {
-    width: 60,
-    height: 60,
-    borderRadius: 22,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: colors.emerald,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: -30,
-    marginHorizontal: 6,
-    borderWidth: 4,
-    borderColor: colors.night,
+    marginTop: -22,
+    marginHorizontal: 8,
     shadowColor: colors.emerald,
-    shadowOpacity: 0.45,
-    shadowRadius: 12,
+    shadowOpacity: 0.4,
+    shadowRadius: 14,
     shadowOffset: { width: 0, height: 4 },
   },
-  backdrop: { flex: 1, backgroundColor: "rgba(6,30,27,0.55)", justifyContent: "flex-end" },
+  backdrop: { flex: 1, backgroundColor: "rgba(5,9,21,0.72)", justifyContent: "flex-end" },
   sheet: {
     backgroundColor: colors.charcoal,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 18,
     paddingBottom: 40,
-    gap: 6,
+    gap: 4,
     borderTopWidth: 1,
-    borderColor: "rgba(216,181,106,0.4)",
+    borderColor: colors.border,
   },
-  grabber: { alignSelf: "center", width: 44, height: 5, borderRadius: 3, backgroundColor: "rgba(248,250,249,0.25)", marginBottom: 8 },
-  sheetTitle: { color: colors.gold, fontSize: 13, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 },
+  grabber: { alignSelf: "center", width: 40, height: 5, borderRadius: 3, backgroundColor: "rgba(247,244,238,0.22)", marginBottom: 10 },
+  sheetTitle: { color: colors.text, fontSize: 18, fontWeight: "700", marginBottom: 6 },
   sheetRow: { flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 11 },
-  sheetIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: colors.emerald, alignItems: "center", justifyContent: "center" },
-  sheetLabel: { color: colors.onDark, fontSize: 16, fontWeight: "700" },
+  sheetIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: tint.blue, alignItems: "center", justifyContent: "center" },
+  sheetLabel: { color: colors.onDark, fontSize: 16, fontWeight: "600" },
   sheetHint: { color: colors.onDarkMuted, fontSize: 13, marginTop: 1 },
 });

@@ -35,7 +35,7 @@ import {
   SectionTitle,
   Segmented,
   styles,
-} from "../ui";
+} from "../../ui";
 
 type Props = { nav: Nav } & ({ id: string } | { kind: Invoice["kind"]; customerId?: string });
 
@@ -511,13 +511,13 @@ function showError(error: unknown) {
 const local = StyleSheet.create({
   lineHead: { flexDirection: "row", alignItems: "center", gap: 10 },
   lineIndex: { color: colors.muted, fontWeight: "800", flex: 1 },
-  lineTotal: { color: colors.text, fontWeight: "900", fontSize: 16 },
+  lineTotal: { color: colors.text, fontWeight: "800", fontSize: 16 },
   darkLabel: { color: colors.onDarkMuted, fontSize: 14 },
   darkValue: { color: colors.onDark, fontSize: 14, fontWeight: "700" },
-  darkStrong: { color: colors.gold, fontSize: 16, fontWeight: "800" },
-  darkStrongValue: { color: colors.emerald, fontSize: 22, fontWeight: "900" },
-  darkDivider: { height: 1, backgroundColor: "rgba(216,181,106,0.3)" },
-  heroAmount: { color: colors.onDark, fontSize: 32, fontWeight: "900" },
+  darkStrong: { color: colors.onDark, fontSize: 16, fontWeight: "700" },
+  darkStrongValue: { color: colors.emerald, fontSize: 24, fontWeight: "800" },
+  darkDivider: { height: 1, backgroundColor: "rgba(199,206,218,0.18)" },
+  heroAmount: { color: colors.onDark, fontSize: 34, fontWeight: "800" },
   detailLine: { gap: 4 },
   detailTitle: { color: colors.text, fontWeight: "700" },
   sheetClose: { minHeight: 36, borderColor: colors.gold },

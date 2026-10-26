@@ -33,7 +33,7 @@ import {
   SectionTitle,
   Segmented,
   styles,
-} from "../ui";
+} from "../../ui";
 
 function fromDraft(draft?: ReceiptDraft): Expense {
   return {
@@ -195,7 +195,7 @@ export function ExpenseEditorScreen({
         </View>
         {!existing ? (
           <Pressable style={local.check} onPress={() => setSaveSupplier((value) => !value)}>
-            <Icon name={saveSupplier ? "checkbox" : "square-outline"} color={saveSupplier ? "#00A57B" : colors.muted} />
+            <Icon name={saveSupplier ? "checkbox" : "square-outline"} color={saveSupplier ? colors.emerald : colors.muted} />
             <Text style={styles.kvLabel}>Händler als Lieferant speichern</Text>
           </Pressable>
         ) : null}
@@ -309,15 +309,15 @@ export function ExpenseEditorScreen({
 }
 
 const local = StyleSheet.create({
-  warning: { backgroundColor: "#FDF3DC", gap: 8 },
+  warning: { backgroundColor: "rgba(251,191,36,0.1)", borderColor: "rgba(251,191,36,0.3)", gap: 8 },
   warningRow: { flexDirection: "row", gap: 8, alignItems: "flex-start" },
-  warningText: { color: "#6B4A12", flex: 1, lineHeight: 19 },
+  warningText: { color: colors.warning, flex: 1, lineHeight: 20 },
   preview: { width: "100%", height: 220, borderRadius: 20, backgroundColor: colors.night },
   check: { flexDirection: "row", gap: 8, alignItems: "center" },
   itemHead: { flexDirection: "row", gap: 8, alignItems: "flex-end" },
   remove: { paddingBottom: 12 },
   itemFoot: { flexDirection: "row", alignItems: "center", gap: 12 },
-  itemTotal: { color: colors.text, fontWeight: "900", fontSize: 16, minWidth: 80, textAlign: "right" },
+  itemTotal: { color: colors.text, fontWeight: "800", fontSize: 16, minWidth: 80, textAlign: "right" },
   mismatch: { color: colors.warning, fontSize: 13 },
   raw: { color: colors.muted, fontFamily: "Menlo", fontSize: 12, lineHeight: 17 },
 });

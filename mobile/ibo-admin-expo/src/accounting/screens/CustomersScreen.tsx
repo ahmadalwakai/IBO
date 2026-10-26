@@ -4,7 +4,7 @@ import { createId, formatDate, formatMoney, statusOf, totalsFor } from "../calc"
 import type { Nav } from "../navigation";
 import { useAccounting } from "../store";
 import type { Customer } from "../types";
-import { Badge, Button, Card, colors, Empty, Field, HeaderButton, ListRow, Screen, SearchField, SectionTitle, Segmented, styles } from "../ui";
+import { Badge, Button, Card, colors, Empty, Field, ListRow, Screen, SearchField, SectionTitle, Segmented, styles } from "../../ui";
 
 export function CustomersScreen({ nav }: { nav: Nav }) {
   const { data } = useAccounting();
@@ -30,7 +30,6 @@ export function CustomersScreen({ nav }: { nav: Nav }) {
     <Screen
       title={kind === "customer" ? "Kunden" : "Lieferanten"}
       subtitle={`${rows.length} Einträge`}
-      right={<HeaderButton icon="person-add" label="Neu anlegen" onPress={() => nav.push({ name: "customer", kind })} />}
     >
       <Segmented
         options={[

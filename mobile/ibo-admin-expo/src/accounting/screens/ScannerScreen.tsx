@@ -5,7 +5,7 @@ import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
 import { isOcrAvailable, recognizeText } from "../../../modules/receipt-ocr";
 import type { Nav } from "../navigation";
 import { groupRows, parseReceipt } from "../receipt-parser";
-import { Button, Card, colors, Empty, Icon, Screen, styles } from "../ui";
+import { Button, Card, colors, Empty, Icon, Screen, styles } from "../../ui";
 
 type Phase = "picking" | "reading" | "error";
 

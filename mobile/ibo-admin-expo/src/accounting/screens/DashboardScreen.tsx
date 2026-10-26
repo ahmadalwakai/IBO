@@ -4,7 +4,7 @@ import { dashboard, formatDate, formatMoney } from "../calc";
 import type { Nav } from "../navigation";
 import { useAccounting } from "../store";
 import { syncLabel } from "../sync";
-import { Card, colors, Empty, Icon, ListRow, Money, Screen, SectionTitle, type IconName } from "../ui";
+import { Card, colors, Empty, Icon, ListRow, Money, Screen, SectionTitle, type IconName } from "../../ui";
 
 export function DashboardScreen({ nav, onClose }: { nav: Nav; onClose: () => void }) {
   const { data, syncStatus, syncNow } = useAccounting();
@@ -13,24 +13,18 @@ export function DashboardScreen({ nav, onClose }: { nav: Nav; onClose: () => voi
   return (
     <Screen
       title="Übersicht"
-      subtitle={`${data.company.name || "Buchhaltung"} · ${syncLabel(syncStatus)}`}
+      subtitle={data.company.name || "Buchhaltung"}
       onBack={onClose}
-      right={
-        <View style={local.headerActions}>
-          <Pressable accessibilityLabel="Jetzt synchronisieren" onPress={syncNow} hitSlop={10}>
-            <Icon
-              name={syncStatus.kind === "offline" || syncStatus.kind === "unauthorized" ? "cloud-offline-outline" : syncStatus.kind === "syncing" ? "sync" : "cloud-done-outline"}
-              color={syncStatus.kind === "offline" || syncStatus.kind === "unauthorized" ? colors.gold : colors.emerald}
-              size={22}
-            />
-          </Pressable>
-          <Pressable accessibilityLabel="Firmendaten" onPress={() => nav.push({ name: "settings" })} hitSlop={10}>
-            <Icon name="settings-outline" color={colors.emerald} size={22} />
-          </Pressable>
-        </View>
-      }
     >
       <Card dark style={local.hero}>
+        <Pressable onPress={syncNow} style={local.syncPill} accessibilityLabel="Jetzt synchronisieren">
+          <Icon
+            name={syncStatus.kind === "offline" || syncStatus.kind === "unauthorized" ? "cloud-offline-outline" : syncStatus.kind === "syncing" ? "sync" : "cloud-done-outline"}
+            color={syncStatus.kind === "offline" || syncStatus.kind === "unauthorized" ? colors.warning : colors.emerald}
+            size={14}
+          />
+          <Text style={local.syncText}>{syncLabel(syncStatus)}</Text>
+        </Pressable>
         <Text style={local.heroLabel}>Saldo (Zahlungseingänge − Ausgaben)</Text>
         <Text style={local.heroValue}>{formatMoney(stats.balance)}</Text>
         <View style={local.heroRow}>
@@ -162,7 +156,7 @@ function Kpi({
 }) {
   return (
     <Pressable onPress={onPress} disabled={!onPress} style={local.kpi}>
-      <Icon name={icon} size={18} color={gold ? colors.gold : "#00A57B"} />
+      <Icon name={icon} size={18} color={gold ? colors.gold : colors.emerald} />
       <Text style={local.kpiLabel} numberOfLines={1}>
         {label}
       </Text>
@@ -177,14 +171,15 @@ function Kpi({
 }
 
 const local = StyleSheet.create({
-  headerActions: { flexDirection: "row", gap: 16, alignItems: "center" },
+  syncPill: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", backgroundColor: "rgba(255,255,255,0.06)", borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 8 },
+  syncText: { color: colors.onDarkMuted, fontSize: 12, fontWeight: "600" },
   hero: { gap: 6, paddingVertical: 20 },
   heroLabel: { color: colors.onDarkMuted, fontSize: 13 },
-  heroValue: { color: colors.onDark, fontSize: 34, fontWeight: "900" },
+  heroValue: { color: colors.onDark, fontSize: 36, fontWeight: "800", letterSpacing: -0.5 },
   heroRow: { flexDirection: "row", marginTop: 12, alignItems: "center" },
-  heroDivider: { width: 1, alignSelf: "stretch", backgroundColor: "rgba(216,181,106,0.35)", marginHorizontal: 14 },
+  heroDivider: { width: 1, alignSelf: "stretch", backgroundColor: "rgba(199,206,218,0.18)", marginHorizontal: 14 },
   heroStat: { flex: 1, gap: 2 },
-  heroStatLabel: { color: colors.gold, fontSize: 12, fontWeight: "700" },
+  heroStatLabel: { color: colors.onDarkMuted, fontSize: 12, fontWeight: "600" },
   heroStatValue: { color: colors.onDark, fontSize: 17, fontWeight: "800" },
   quickRow: { flexDirection: "row", gap: 10 },
   quick: {
@@ -209,6 +204,6 @@ const local = StyleSheet.create({
     gap: 4,
   },
   kpiLabel: { color: colors.muted, fontSize: 12, fontWeight: "700", marginTop: 4 },
-  kpiValue: { color: colors.text, fontSize: 20, fontWeight: "900" },
+  kpiValue: { color: colors.text, fontSize: 20, fontWeight: "800" },
   kpiHint: { color: colors.muted, fontSize: 11 },
 });

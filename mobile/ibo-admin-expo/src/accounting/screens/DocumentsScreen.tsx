@@ -8,7 +8,7 @@ import { groupRows } from "../receipt-parser";
 import { importDocument, shareFile } from "../storage";
 import { useAccounting, useDocumentUri } from "../store";
 import type { DocumentKind, StoredDocument } from "../types";
-import { Badge, Button, Card, Chips, colors, Empty, Field, HeaderButton, ListRow, Screen, SearchField, SectionTitle, styles, type IconName } from "../ui";
+import { Badge, Button, Card, Chips, colors, Empty, Field, ListRow, Screen, SearchField, SectionTitle, styles, type IconName } from "../../ui";
 
 const kindLabels: Record<DocumentKind, string> = {
   receipt: "Beleg",
@@ -77,7 +77,6 @@ export function DocumentsScreen({ nav }: { nav: Nav }) {
       title="Dokumente"
       subtitle={`${data.documents.length} archiviert · Volltextsuche`}
       onBack={nav.back}
-      right={<HeaderButton icon="cloud-upload" label="Dokument hochladen" onPress={upload} />}
     >
       <SearchField value={query} onChangeText={setQuery} placeholder="Suche im Inhalt, z. B. „Farbe 19 %“" />
       <Chips
@@ -145,8 +144,8 @@ export function DocumentScreen({ nav, id }: { nav: Nav; id: string }) {
       <Text style={styles.kvLabel}>{doc.remote ? "In der Cloud gesichert" : "Noch nicht in der Cloud gesichert"}</Text>
 
       {twins.length ? (
-        <Card style={{ backgroundColor: "#F6EEDC" }}>
-          <Text style={{ color: "#6B4A12" }}>{`Identische Datei auch archiviert als: ${twins.map((twin) => `„${twin.title}“`).join(", ")}`}</Text>
+        <Card style={{ backgroundColor: "rgba(184,149,103,0.18)" }}>
+          <Text style={{ color: "#D9B98C" }}>{`Identische Datei auch archiviert als: ${twins.map((twin) => `„${twin.title}“`).join(", ")}`}</Text>
         </Card>
       ) : null}
 
