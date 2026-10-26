@@ -9,12 +9,18 @@
       "distribution": "internal",
       "ios": {
         "resourceClass": "m-medium"
+      },
+      "env": {
+        "EXPO_USE_PRECOMPILED_MODULES": "0"
       }
     },
     "preview": {
       "distribution": "internal",
       "ios": {
         "resourceClass": "m-medium"
+      },
+      "env": {
+        "EXPO_USE_PRECOMPILED_MODULES": "0"
       }
     },
     "production": {
@@ -22,6 +28,9 @@
       "ios": {
         "credentialsSource": "local",
         "resourceClass": "m-medium"
+      },
+      "env": {
+        "EXPO_USE_PRECOMPILED_MODULES": "0"
       }
     }
   },

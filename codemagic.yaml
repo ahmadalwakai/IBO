@@ -14,6 +14,9 @@ workflows:
         APP_STORE_APPLE_ID: 6792026724
         XCODE_WORKSPACE: ios/IBOAdmin.xcworkspace
         XCODE_SCHEME: IBOAdmin
+        # Expo's precompiled XCFrameworks can be built against a newer ExpoModulesCore than the
+        # one in package-lock and then crash at launch with missing symbols (build 1.2.0/8).
+        EXPO_USE_PRECOMPILED_MODULES: "0"
       node: 22
       xcode: latest
       cocoapods: default
@@ -42,6 +45,33 @@ workflows:
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME"
+      - name: Verify ExpoModulesCore symbols
+        script: |
+          # Fails the build when any binary in the app needs an ExpoModulesCore symbol that the
+          # bundled ExpoModulesCore does not export; such builds crash before the first frame.
+          set -euo pipefail
+          WORK=$(mktemp -d)
+          unzip -q "$APP_DIR"/build/ios/ipa/*.ipa -d "$WORK"
+          APP=$(find "$WORK/Payload" -maxdepth 1 -name "*.app" | head -1)
+          if grep -q "Expo-precompiled" -r "$APP_DIR/ios/Pods/Target Support Files" 2>/dev/null; then echo "Precompiled Expo modules were used"; fi
+          CORE="$APP/Frameworks/ExpoModulesCore.framework/ExpoModulesCore"
+          if [ -f "$CORE" ]; then
+            nm -gU "$CORE" | awk '{print $NF}' | sort -u > "$WORK/defined.txt"
+            : > "$WORK/missing.txt"
+            find "$APP" -type f -perm +111 | while read -r BIN; do
+              file "$BIN" | grep -q "Mach-O" || continue
+              [ "$BIN" = "$CORE" ] && continue
+              nm -u "$BIN" 2>/dev/null | awk '{print $NF}' | grep 's15ExpoModulesCore' | sort -u | comm -23 - "$WORK/defined.txt" | sed "s|^|$(basename "$BIN"): |" >> "$WORK/missing.txt" || true
+            done
+            if [ -s "$WORK/missing.txt" ]; then
+              echo "Binaries reference ExpoModulesCore symbols that are not exported:"
+              cat "$WORK/missing.txt"
+              exit 1
+            fi
+            echo "All ExpoModulesCore symbol references resolve."
+          else
+            echo "ExpoModulesCore is linked statically; dynamic symbol check not applicable."
+          fi
     artifacts:
       - mobile/ibo-admin-expo/build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
@@ -59,7 +89,8 @@ workflows:
       vars:
         APP_DIR: mobile/ibo-admin-expo
         BUNDLE_ID: de.ibocreative.admin
-        SMOKE_REFS: "HEAD 67baf00"
+        SMOKE_REFS: "HEAD"
+        EXPO_USE_PRECOMPILED_MODULES: "0"
       node: 22
       xcode: latest
       cocoapods: default
